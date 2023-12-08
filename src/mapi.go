@@ -98,7 +98,7 @@ func (c *MapiConn) Disconnect() {
 // Cmd sends a MAPI command to MonetDB.
 func (c *MapiConn) Cmd(operation string) (string, error) {
 	if c.State != MAPI_STATE_READY {
-		//lint:ignore ST1005
+		//lint:ignore ST1005 prepare to enable staticchecks
 		return "", fmt.Errorf("Database not connected")
 	}
 
@@ -126,11 +126,11 @@ func (c *MapiConn) Cmd(operation string) (string, error) {
 		return resp, nil
 
 	} else if strings.HasPrefix(resp, mapi_MSG_ERROR) {
-		//lint:ignore ST1005
+		//lint:ignore ST1005 prepare to enable staticchecks
 		return "", fmt.Errorf("Operational error: %s", resp[1:])
 
 	} else {
-		//lint:ignore ST1005
+		//lint:ignore ST1005 prepare to enable staticchecks
 		return "", fmt.Errorf("Unknown state: %s", resp)
 	}
 }
@@ -201,7 +201,7 @@ func (c *MapiConn) tryLogin(iteration int) error {
 
 	} else if strings.HasPrefix(prompt, mapi_MSG_ERROR) {
 		// TODO log error
-		//lint:ignore ST1005
+		//lint:ignore ST1005 prepare to enable staticchecks
 		return fmt.Errorf("Database error: %s", prompt[1:])
 
 	} else if strings.HasPrefix(prompt, mapi_MSG_REDIRECT) {
@@ -213,7 +213,7 @@ func (c *MapiConn) tryLogin(iteration int) error {
 			if iteration <= 10 {
 				c.tryLogin(iteration + 1)
 			} else {
-				//lint:ignore ST1005
+				//lint:ignore ST1005 prepare to enable staticchecks
 				return fmt.Errorf("Maximal number of redirects reached (10)")
 			}
 
@@ -227,11 +227,11 @@ func (c *MapiConn) tryLogin(iteration int) error {
 			c.Connect()
 
 		} else {
-			//lint:ignore ST1005
+			//lint:ignore ST1005 prepare to enable staticchecks
 			return fmt.Errorf("Unknown redirect: %s", prompt)
 		}
 	} else {
-		//lint:ignore ST1005
+		//lint:ignore ST1005 prepare to enable staticchecks
 		return fmt.Errorf("Unknown state: %s", prompt)
 	}
 
@@ -249,7 +249,7 @@ func (c *MapiConn) challengeResponse(challenge []byte) (string, error) {
 	algo := t[5]
 
 	if protocol != "9" {
-		//lint:ignore ST1005
+		//lint:ignore ST1005 prepare to enable staticchecks
 		return "", fmt.Errorf("We only speak protocol v9")
 	}
 
@@ -258,7 +258,7 @@ func (c *MapiConn) challengeResponse(challenge []byte) (string, error) {
 		h = crypto.SHA512.New()
 	} else {
 		// TODO support more algorithm
-		//lint:ignore ST1005
+		//lint:ignore ST1005 prepare to enable staticchecks
 		return "", fmt.Errorf("Unsupported algorithm: %s", algo)
 	}
 	io.WriteString(h, c.Password)
@@ -279,7 +279,7 @@ func (c *MapiConn) challengeResponse(challenge []byte) (string, error) {
 		pwhash = fmt.Sprintf("{MD5}%x", h.Sum(nil))
 
 	} else {
-		//lint:ignore ST1005
+		//lint:ignore ST1005 prepare to enable staticchecks
 		return "", fmt.Errorf("Unsupported hash algorithm required for login %s", hashes)
 	}
 
@@ -352,7 +352,7 @@ func (c *MapiConn) putBlock(b []byte) error {
 			last = 1
 		}
 
-		//lint:ignore S1021
+		//lint:ignore S1021 prepare to enable staticchecks
 		var packed uint16
 		packed = uint16((length << 1) + last)
 		flag := new(bytes.Buffer)

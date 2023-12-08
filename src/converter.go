@@ -47,17 +47,17 @@ const (
 	mdb_TIMESTAMPTZ = "timestamptz"
 
 	// full names and aliases, spaces are replaced with underscores
-	//lint:ignore U1000
+	//lint:ignore U1000 prepare to enable staticchecks
 	mdb_CHARACTER               = mdb_CHAR
-	//lint:ignore U1000
+	//lint:ignore U1000 prepare to enable staticchecks
 	mdb_CHARACTER_VARYING       = mdb_VARCHAR
-	//lint:ignore U1000
+	//lint:ignore U1000 prepare to enable staticchecks
 	mdb_CHARACHTER_LARGE_OBJECT = mdb_CLOB
-	//lint:ignore U1000
+	//lint:ignore U1000 prepare to enable staticchecks
 	mdb_BINARY_LARGE_OBJECT     = mdb_BLOB
-	//lint:ignore U1000
+	//lint:ignore U1000 prepare to enable staticchecks
 	mdb_NUMERIC                 = mdb_DECIMAL
-	//lint:ignore U1000
+	//lint:ignore U1000 prepare to enable staticchecks
 	mdb_DOUBLE_PRECISION        = mdb_DOUBLE
 )
 
@@ -261,7 +261,7 @@ func toByteString(v driver.Value) (string, error) {
 	case []uint8:
 		return toQuotedString(string(val))
 	default:
-		//lint:ignore ST1005
+		//lint:ignore ST1005 prepare to enable staticchecks
 		return "", fmt.Errorf("Unsupported type")
 	}
 }
@@ -273,7 +273,7 @@ func toDateTimeString(v driver.Value) (string, error) {
 	case Date:
 		return toQuotedString(fmt.Sprintf("%04d-%02d-%02d", val.Year, val.Month, val.Day))
 	default:
-		//lint:ignore ST1005
+		//lint:ignore ST1005 prepare to enable staticchecks
 		return "", fmt.Errorf("Unsupported type")
 	}
 }
@@ -306,7 +306,7 @@ func convertToGo(value, dataType string) (driver.Value, error) {
 		value := strings.TrimSpace(value)
 		return mapper(value)
 	}
-	//lint:ignore ST1005
+	//lint:ignore ST1005 prepare to enable staticchecks
 	return nil, fmt.Errorf("Type not supported: %s", dataType)
 }
 
@@ -320,6 +320,6 @@ func convertToMonet(value driver.Value) (string, error) {
 	if mapper, ok := toMonetMappers[n]; ok {
 		return mapper(value)
 	}
-	//lint:ignore ST1005
+	//lint:ignore ST1005 prepare to enable staticchecks
 	return "", fmt.Errorf("Type not supported: %v", t)
 }

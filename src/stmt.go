@@ -82,7 +82,7 @@ func (s *Stmt) Query(args []driver.Value) (driver.Rows, error) {
 		return rows, rows.err
 	}
 
-	//lint:ignore SA4006
+	//lint:ignore SA4006 prepare to enable staticchecks
 	err = s.storeResult(r)
 	rows.queryId = s.queryId
 	rows.lastRowId = s.lastRowId
@@ -186,7 +186,7 @@ func (s *Stmt) storeResult(r string) error {
 
 		} else if strings.HasPrefix(line, mapi_MSG_QTRANS) {
 			s.offset = 0
-			//lint:ignore S1019
+			//lint:ignore S1019 prepare to enable staticchecks
 			s.rows = make([][]driver.Value, 0, 0)
 			s.lastRowId = 0
 			s.description = nil
@@ -236,19 +236,19 @@ func (s *Stmt) storeResult(r string) error {
 			return nil
 
 		} else if strings.HasPrefix(line, mapi_MSG_ERROR) {
-			//lint:ignore ST1005
+			//lint:ignore ST1005 prepare to enable staticchecks
 			return fmt.Errorf("Database error: %s", line[1:])
 		}
 	}
 
-	//lint:ignore ST1005
+	//lint:ignore ST1005 prepare to enable staticchecks
 	return fmt.Errorf("Unknown state: %s", r)
 }
 
 func (s *Stmt) parseTuple(d string) ([]driver.Value, error) {
 	items := strings.Split(d[1:len(d)-1], ",\t")
 	if len(items) != len(s.description) {
-		//lint:ignore ST1005
+		//lint:ignore ST1005 prepare to enable staticchecks
 		return nil, fmt.Errorf("Length of row doesn't match header")
 	}
 
@@ -268,7 +268,7 @@ func (s *Stmt) updateDescription(
 	internalSizes, precisions, scales, nullOks []int) {
 
 	d := make([]description, len(columnNames))
-	//lint:ignore S1005
+	//lint:ignore S1005 prepare to enable staticchecks
 	for i, _ := range columnNames {
 		desc := description{
 			columnName:   columnNames[i],

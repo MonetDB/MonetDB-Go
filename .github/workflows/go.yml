@@ -26,7 +26,23 @@ jobs:
       uses: dominikh/staticcheck-action@v1.3.0
       with:
         version: "2023.1.6"
-        
+
+    - name: Go test coverage    
+      uses: gwatts/go-coverage-action@v1
+      id: coverage
+      with:
+        # Optional coverage threshold
+        # use fail-coverage to determine what should happen below this threshold
+        coverage-threshold: 25
+  
+        # collect coverage for all packages beyond the one under test
+        cover-pkg: ./...
+
+        # Ignore code-generated files when calculating coverage totals
+        ignore-pattern: |
+          \.pb\.go$
+          \_string\.go$
+
     - name: Build
       run: go build -v ./...
 

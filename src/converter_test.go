@@ -104,6 +104,7 @@ func TestConvertToGo(t *testing.T) {
 func compareByteArray(t *testing.T, val []byte, e driver.Value) bool {
 	switch exp := e.(type) {
 	case []byte:
+		//lint:ignore S1004
 		return bytes.Compare(val, exp) == 0
 	default:
 		return false

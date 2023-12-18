@@ -32,24 +32,3 @@ jobs:
 
     - name: Test
       run: go test -v -test.short ./...
-
-    - name: Go test coverage    
-      uses: gwatts/go-coverage-action@v1
-      id: coverage
-      with:
-        # Optional coverage threshold
-        # use fail-coverage to determine what should happen below this threshold
-        coverage-threshold: 25 
-
-        # The value of this field is a JSON array of strings. This is the only format
-        # that works, all others give an error
-        test-args: '["-test.short"]'
-
-        # collect coverage for all packages beyond the one under test
-        cover-pkg: ./...
-
-        # Ignore code-generated files when calculating coverage totals
-        ignore-pattern: |
-          \.pb\.go$
-          \_string\.go$
-

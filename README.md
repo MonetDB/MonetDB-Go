@@ -83,3 +83,4 @@ The go testing framework can generate a code coverage report using the following
 go test ./... -coverprofile=cover.out
 go tool cover -html=cover.out -o cover.html
 ```
+The [go coverage action](https://github.com/gwatts/go-coverage-action) cannot be run in github actions, because of permission problems.

@@ -39,8 +39,10 @@ jobs:
       with:
         # Optional coverage threshold
         # use fail-coverage to determine what should happen below this threshold
-        coverage-threshold: 25
-  
+        coverage-threshold: 25 
+
+        test-args: [-test.short]
+
         # collect coverage for all packages beyond the one under test
         cover-pkg: ./...
 
@@ -48,7 +50,4 @@ jobs:
         ignore-pattern: |
           \.pb\.go$
           \_string\.go$
-
-        test-args: [-test.short]
-
 

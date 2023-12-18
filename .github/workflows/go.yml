@@ -27,6 +27,12 @@ jobs:
       with:
         version: "2023.1.6"
 
+    - name: Build
+      run: go build -v ./...
+
+    - name: Test
+      run: go test -v -test.short ./...
+
     - name: Go test coverage    
       uses: gwatts/go-coverage-action@v1
       id: coverage
@@ -43,8 +49,3 @@ jobs:
           \.pb\.go$
           \_string\.go$
 
-    - name: Build
-      run: go build -v ./...
-
-    - name: Test
-      run: go test -v ./...

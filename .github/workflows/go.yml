@@ -49,6 +49,6 @@ jobs:
           \.pb\.go$
           \_string\.go$
 
-        test-args: ["-test.short"]
+        test-args: [-test.short]
 
 

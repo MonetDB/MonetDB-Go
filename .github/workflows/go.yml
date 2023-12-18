@@ -41,6 +41,8 @@ jobs:
         # use fail-coverage to determine what should happen below this threshold
         coverage-threshold: 25 
 
+        # The value of this field is a JSON array of strings. This is the only format
+        # that works, all others give an error
         test-args: '["-test.short"]'
 
         # collect coverage for all packages beyond the one under test

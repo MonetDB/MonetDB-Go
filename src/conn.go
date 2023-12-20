@@ -12,20 +12,21 @@ import (
 )
 
 type Conn struct {
-	config mapi.Config
-	mapi   *MapiConn
+	mapi   *mapi.MapiConn
 }
 
-func newConn(c mapi.Config) (*Conn, error) {
+func newConn(name string) (*Conn, error) {
 	conn := &Conn{
-		config: c,
 		mapi:   nil,
 	}
 
-	m := NewMapi(c.Hostname, c.Port, c.Username, c.Password, c.Database, "sql")
-	err := m.Connect()
+	m, err := mapi.NewMapi(name)
 	if err != nil {
 		return conn, err
+	}
+	errConn := m.Connect()
+	if errConn != nil {
+		return conn, errConn
 	}
 
 	conn.mapi = m
@@ -62,7 +63,10 @@ func (c *Conn) cmd(cmd string) (string, error) {
 	return c.mapi.Cmd(cmd)
 }
 
-func (c *Conn) execute(q string) (string, error) {
-	cmd := fmt.Sprintf("s%s;", q)
-	return c.cmd(cmd)
+func (c *Conn) execute(query string) (string, error) {
+	if c.mapi == nil {
+		//lint:ignore ST1005 
+		return "", fmt.Errorf("Database connection closed")
+	}
+	return c.mapi.Execute(query)
 }

@@ -7,8 +7,6 @@ package monetdb
 import (
 	"database/sql"
 	"database/sql/driver"
-
-	"github.com/MonetDB/MonetDB-Go/src/mapi"
 )
 
 func init() {
@@ -19,11 +17,6 @@ type Driver struct {
 }
 
 func (*Driver) Open(name string) (driver.Conn, error) {
-	c, err := mapi.ParseDSN(name)
-	if err != nil {
-		return nil, err
-	}
-
-	return newConn(c)
+	return newConn(name)
 }
 

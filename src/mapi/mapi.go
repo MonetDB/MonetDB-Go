@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package monetdb
+package mapi
 
 import (
 	"bytes"
@@ -22,20 +22,20 @@ import (
 const (
 	mapi_MAX_PACKAGE_LENGTH = (1024 * 8) - 2
 
-	mapi_MSG_PROMPT   = ""
-	mapi_MSG_INFO     = "#"
-	mapi_MSG_ERROR    = "!"
-	mapi_MSG_Q        = "&"
-	mapi_MSG_QTABLE   = "&1"
-	mapi_MSG_QUPDATE  = "&2"
-	mapi_MSG_QSCHEMA  = "&3"
-	mapi_MSG_QTRANS   = "&4"
-	mapi_MSG_QPREPARE = "&5"
-	mapi_MSG_QBLOCK   = "&6"
-	mapi_MSG_HEADER   = "%"
-	mapi_MSG_TUPLE    = "["
-	mapi_MSG_REDIRECT = "^"
-	mapi_MSG_OK       = "=OK"
+	MAPI_MSG_PROMPT   = ""
+	MAPI_MSG_INFO     = "#"
+	MAPI_MSG_ERROR    = "!"
+	MAPI_MSG_Q        = "&"
+	MAPI_MSG_QTABLE   = "&1"
+	MAPI_MSG_QUPDATE  = "&2"
+	MAPI_MSG_QSCHEMA  = "&3"
+	MAPI_MSG_QTRANS   = "&4"
+	MAPI_MSG_QPREPARE = "&5"
+	MAPI_MSG_QBLOCK   = "&6"
+	MAPI_MSG_HEADER   = "%"
+	MAPI_MSG_TUPLE    = "["
+	MAPI_MSG_REDIRECT = "^"
+	MAPI_MSG_OK       = "=OK"
 )
 
 // MAPI connection is established.
@@ -73,17 +73,23 @@ type MapiConn struct {
 // NewMapi returns a MonetDB's MAPI connection handle.
 //
 // To establish the connection, call the Connect() function.
-func NewMapi(hostname string, port int, username, password, database, language string) *MapiConn {
+func NewMapi(name string) (*MapiConn, error) {
+	var language = "sql"
+	c, err := parseDSN(name)
+	if err != nil {
+		return nil, err
+	}
+
 	return &MapiConn{
-		Hostname: hostname,
-		Port:     port,
-		Username: username,
-		Password: password,
-		Database: database,
+		Hostname: c.Hostname,
+		Port:     c.Port,
+		Username: c.Username,
+		Password: c.Password,
+		Database: c.Database,
 		Language: language,
 
 		State: MAPI_STATE_INIT,
-	}
+	}, nil
 }
 
 // Disconnect closes the connection.
@@ -93,6 +99,11 @@ func (c *MapiConn) Disconnect() {
 		c.conn.Close()
 		c.conn = nil
 	}
+}
+
+func (c *MapiConn) Execute(query string) (string, error) {
+	cmd := fmt.Sprintf("s%s;", query)
+	return c.Cmd(cmd)
 }
 
 // Cmd sends a MAPI command to MonetDB.
@@ -115,17 +126,17 @@ func (c *MapiConn) Cmd(operation string) (string, error) {
 	if len(resp) == 0 {
 		return "", nil
 
-	} else if strings.HasPrefix(resp, mapi_MSG_OK) {
+	} else if strings.HasPrefix(resp, MAPI_MSG_OK) {
 		return strings.TrimSpace(resp[3:]), nil
 
 	} else if resp == mapi_MSG_MORE {
 		// tell server it isn't going to get more
 		return c.Cmd("")
 
-	} else if strings.HasPrefix(resp, mapi_MSG_Q) || strings.HasPrefix(resp, mapi_MSG_HEADER) || strings.HasPrefix(resp, mapi_MSG_TUPLE) {
+	} else if strings.HasPrefix(resp, MAPI_MSG_Q) || strings.HasPrefix(resp, MAPI_MSG_HEADER) || strings.HasPrefix(resp, MAPI_MSG_TUPLE) {
 		return resp, nil
 
-	} else if strings.HasPrefix(resp, mapi_MSG_ERROR) {
+	} else if strings.HasPrefix(resp, MAPI_MSG_ERROR) {
 		//lint:ignore ST1005 prepare to enable staticchecks
 		return "", fmt.Errorf("Operational error: %s", resp[1:])
 
@@ -193,18 +204,18 @@ func (c *MapiConn) tryLogin(iteration int) error {
 	if len(prompt) == 0 {
 		// Empty response, server is happy
 
-	} else if prompt == mapi_MSG_OK {
+	} else if prompt == MAPI_MSG_OK {
 		// pass
 
-	} else if strings.HasPrefix(prompt, mapi_MSG_INFO) {
+	} else if strings.HasPrefix(prompt, MAPI_MSG_INFO) {
 		// TODO log info
 
-	} else if strings.HasPrefix(prompt, mapi_MSG_ERROR) {
+	} else if strings.HasPrefix(prompt, MAPI_MSG_ERROR) {
 		// TODO log error
 		//lint:ignore ST1005 prepare to enable staticchecks
 		return fmt.Errorf("Database error: %s", prompt[1:])
 
-	} else if strings.HasPrefix(prompt, mapi_MSG_REDIRECT) {
+	} else if strings.HasPrefix(prompt, MAPI_MSG_REDIRECT) {
 		t := strings.Split(prompt, " ")
 		r := strings.Split(t[0][1:], ":")
 

@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/MonetDB/MonetDB-Go/src/mapi"
 )
 
 type Stmt struct {
@@ -140,15 +142,15 @@ func (s *Stmt) storeResult(r string) error {
 	var nullOks []int
 
 	for _, line := range strings.Split(r, "\n") {
-		if strings.HasPrefix(line, mapi_MSG_INFO) {
+		if strings.HasPrefix(line, mapi.MAPI_MSG_INFO) {
 			// TODO log
 
-		} else if strings.HasPrefix(line, mapi_MSG_QPREPARE) {
+		} else if strings.HasPrefix(line, mapi.MAPI_MSG_QPREPARE) {
 			t := strings.Split(strings.TrimSpace(line[2:]), " ")
 			s.execId, _ = strconv.Atoi(t[0])
 			return nil
 
-		} else if strings.HasPrefix(line, mapi_MSG_QTABLE) {
+		} else if strings.HasPrefix(line, mapi.MAPI_MSG_QTABLE) {
 			t := strings.Split(strings.TrimSpace(line[2:]), " ")
 			s.queryId, _ = strconv.Atoi(t[0])
 			s.rowCount, _ = strconv.Atoi(t[1])
@@ -162,29 +164,29 @@ func (s *Stmt) storeResult(r string) error {
 			scales = make([]int, s.columnCount)
 			nullOks = make([]int, s.columnCount)
 
-		} else if strings.HasPrefix(line, mapi_MSG_TUPLE) {
+		} else if strings.HasPrefix(line, mapi.MAPI_MSG_TUPLE) {
 			v, err := s.parseTuple(line)
 			if err != nil {
 				return err
 			}
 			s.rows = append(s.rows, v)
 
-		} else if strings.HasPrefix(line, mapi_MSG_QBLOCK) {
+		} else if strings.HasPrefix(line, mapi.MAPI_MSG_QBLOCK) {
 			s.rows = make([][]driver.Value, 0)
 
-		} else if strings.HasPrefix(line, mapi_MSG_QSCHEMA) {
+		} else if strings.HasPrefix(line, mapi.MAPI_MSG_QSCHEMA) {
 			s.offset = 0
 			s.rows = make([][]driver.Value, 0)
 			s.lastRowId = 0
 			s.description = nil
 			s.rowCount = 0
 
-		} else if strings.HasPrefix(line, mapi_MSG_QUPDATE) {
+		} else if strings.HasPrefix(line, mapi.MAPI_MSG_QUPDATE) {
 			t := strings.Split(strings.TrimSpace(line[2:]), " ")
 			s.rowCount, _ = strconv.Atoi(t[0])
 			s.lastRowId, _ = strconv.Atoi(t[1])
 
-		} else if strings.HasPrefix(line, mapi_MSG_QTRANS) {
+		} else if strings.HasPrefix(line, mapi.MAPI_MSG_QTRANS) {
 			s.offset = 0
 			//lint:ignore S1019 prepare to enable staticchecks
 			s.rows = make([][]driver.Value, 0, 0)
@@ -192,7 +194,7 @@ func (s *Stmt) storeResult(r string) error {
 			s.description = nil
 			s.rowCount = 0
 
-		} else if strings.HasPrefix(line, mapi_MSG_HEADER) {
+		} else if strings.HasPrefix(line, mapi.MAPI_MSG_HEADER) {
 			t := strings.Split(line[1:], "#")
 			data := strings.TrimSpace(t[0])
 			identity := strings.TrimSpace(t[1])
@@ -232,10 +234,10 @@ func (s *Stmt) storeResult(r string) error {
 			s.offset = 0
 			s.lastRowId = 0
 
-		} else if strings.HasPrefix(line, mapi_MSG_PROMPT) {
+		} else if strings.HasPrefix(line, mapi.MAPI_MSG_PROMPT) {
 			return nil
 
-		} else if strings.HasPrefix(line, mapi_MSG_ERROR) {
+		} else if strings.HasPrefix(line, mapi.MAPI_MSG_ERROR) {
 			//lint:ignore ST1005 prepare to enable staticchecks
 			return fmt.Errorf("Database error: %s", line[1:])
 		}

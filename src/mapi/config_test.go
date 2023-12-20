@@ -26,7 +26,7 @@ func TestParseDSN(t *testing.T) {
 	for _, tc := range tcs {
 		n := tc[0]
 		ok := len(tc) > 1
-		c, err := ParseDSN(n)
+		c, err := parseDSN(n)
 
 		if ok && err != nil {
 			t.Errorf("Error parsing DSN: %s -> %v", n, err)
@@ -67,7 +67,7 @@ func TestParseIpv6DSN(t *testing.T) {
 	for _, tc := range tcs {
 		n := tc[0]
 		ok := len(tc) > 1
-		c, err := ParseDSN(n)
+		c, err := parseDSN(n)
 
 		if ok && err != nil {
 			t.Errorf("Error parsing DSN: %s -> %v", n, err)

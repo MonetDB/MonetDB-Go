@@ -7,14 +7,16 @@ package monetdb
 import (
 	"database/sql/driver"
 	"fmt"
+
+	"github.com/MonetDB/MonetDB-Go/src/mapi"
 )
 
 type Conn struct {
-	config config
+	config mapi.Config
 	mapi   *MapiConn
 }
 
-func newConn(c config) (*Conn, error) {
+func newConn(c mapi.Config) (*Conn, error) {
 	conn := &Conn{
 		config: c,
 		mapi:   nil,

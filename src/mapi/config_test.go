@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package monetdb
+package mapi
 
 import (
 	"strconv"
@@ -26,7 +26,7 @@ func TestParseDSN(t *testing.T) {
 	for _, tc := range tcs {
 		n := tc[0]
 		ok := len(tc) > 1
-		c, err := parseDSN(n)
+		c, err := ParseDSN(n)
 
 		if ok && err != nil {
 			t.Errorf("Error parsing DSN: %s -> %v", n, err)
@@ -67,7 +67,7 @@ func TestParseIpv6DSN(t *testing.T) {
 	for _, tc := range tcs {
 		n := tc[0]
 		ok := len(tc) > 1
-		c, err := parseDSN(n)
+		c, err := ParseDSN(n)
 
 		if ok && err != nil {
 			t.Errorf("Error parsing DSN: %s -> %v", n, err)

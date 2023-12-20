@@ -8,6 +8,8 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"io"
+
+	"github.com/MonetDB/MonetDB-Go/src/mapi"
 )
 
 type Rows struct {
@@ -23,7 +25,7 @@ type Rows struct {
 	lastRowId   int
 	rowCount    int
 	rows        [][]driver.Value
-	description []description
+	description []mapi.Description
 	columns     []string
 }
 
@@ -42,7 +44,7 @@ func (r *Rows) Columns() []string {
 	if r.columns == nil {
 		r.columns = make([]string, len(r.description))
 		for i, d := range r.description {
-			r.columns[i] = d.columnName
+			r.columns[i] = d.ColumnName
 		}
 	}
 	return r.columns
@@ -111,9 +113,9 @@ func (r *Rows) fetchNext() error {
 		return err
 	}
 
-	r.stmt.storeResult(res)
-	r.rows = r.stmt.rows
-	r.description = r.stmt.description
+	r.stmt.resultset.StoreResult(res)
+	r.rows = r.stmt.copyRows(r.stmt.resultset.Rows)
+	r.description = r.stmt.resultset.Description
 
 	return nil
 }

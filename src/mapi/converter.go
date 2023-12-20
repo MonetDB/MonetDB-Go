@@ -2,10 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package monetdb
+package mapi
 
 import (
-	"database/sql/driver"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -70,10 +69,10 @@ var timeFormats = []string{
 	"15:04:05",
 }
 
-type toGoConverter func(string) (driver.Value, error)
-type toMonetConverter func(driver.Value) (string, error)
+type toGoConverter func(string) (Value, error)
+type toMonetConverter func(Value) (string, error)
 
-func strip(v string) (driver.Value, error) {
+func strip(v string) (Value, error) {
 	return unquote(strings.TrimSpace(v[1 : len(v)-1]))
 }
 
@@ -114,15 +113,15 @@ func unquote(s string) (string, error) {
 	return string(buf), nil
 }
 
-func toByteArray(v string) (driver.Value, error) {
+func toByteArray(v string) (Value, error) {
 	return []byte(v[1 : len(v)-1]), nil
 }
 
-func toDouble(v string) (driver.Value, error) {
+func toDouble(v string) (Value, error) {
 	return strconv.ParseFloat(v, 64)
 }
 
-func toFloat(v string) (driver.Value, error) {
+func toFloat(v string) (Value, error) {
 	var r float32
 	i, err := strconv.ParseFloat(v, 32)
 	if err == nil {
@@ -131,7 +130,7 @@ func toFloat(v string) (driver.Value, error) {
 	return r, err
 }
 
-func toInt8(v string) (driver.Value, error) {
+func toInt8(v string) (Value, error) {
 	var r int8
 	i, err := strconv.ParseInt(v, 10, 8)
 	if err == nil {
@@ -140,7 +139,7 @@ func toInt8(v string) (driver.Value, error) {
 	return r, err
 }
 
-func toInt16(v string) (driver.Value, error) {
+func toInt16(v string) (Value, error) {
 	var r int16
 	i, err := strconv.ParseInt(v, 10, 16)
 	if err == nil {
@@ -149,7 +148,7 @@ func toInt16(v string) (driver.Value, error) {
 	return r, err
 }
 
-func toInt32(v string) (driver.Value, error) {
+func toInt32(v string) (Value, error) {
 	var r int32
 	i, err := strconv.ParseInt(v, 10, 32)
 	if err == nil {
@@ -159,7 +158,7 @@ func toInt32(v string) (driver.Value, error) {
 	return r, err
 }
 
-func toInt64(v string) (driver.Value, error) {
+func toInt64(v string) (Value, error) {
 	var r int64
 	i, err := strconv.ParseInt(v, 10, 64)
 	if err == nil {
@@ -179,15 +178,15 @@ func parseTime(v string) (t time.Time, err error) {
 	return
 }
 
-func toNil(v string) (driver.Value, error) {
+func toNil(v string) (Value, error) {
 	return "NULL", nil
 }
 
-func toBool(v string) (driver.Value, error) {
+func toBool(v string) (Value, error) {
 	return strconv.ParseBool(v)
 }
 
-func toDate(v string) (driver.Value, error) {
+func toDate(v string) (Value, error) {
 	t, err := parseTime(v)
 	if err != nil {
 		return nil, err
@@ -196,7 +195,7 @@ func toDate(v string) (driver.Value, error) {
 	return Date{year, month, day}, nil
 }
 
-func toTime(v string) (driver.Value, error) {
+func toTime(v string) (Value, error) {
 	t, err := parseTime(v)
 	if err != nil {
 		return nil, err
@@ -204,10 +203,10 @@ func toTime(v string) (driver.Value, error) {
 	hour, min, sec := t.Clock()
 	return Time{hour, min, sec}, nil
 }
-func toTimestamp(v string) (driver.Value, error) {
+func toTimestamp(v string) (Value, error) {
 	return parseTime(v)
 }
-func toTimestampTz(v string) (driver.Value, error) {
+func toTimestampTz(v string) (Value, error) {
 	return parseTime(v)
 }
 
@@ -241,22 +240,22 @@ var toGoMappers = map[string]toGoConverter{
 	mdb_FLOAT:          toFloat,
 }
 
-func toString(v driver.Value) (string, error) {
+func toString(v Value) (string, error) {
 	return fmt.Sprintf("%v", v), nil
 }
 
-func toQuotedString(v driver.Value) (string, error) {
+func toQuotedString(v Value) (string, error) {
 	s := fmt.Sprintf("%v", v)
 	s = strings.Replace(s, "\\", "\\\\", -1)
 	s = strings.Replace(s, "'", "\\'", -1)
 	return fmt.Sprintf("'%v'", s), nil
 }
 
-func toNull(v driver.Value) (string, error) {
+func toNull(v Value) (string, error) {
 	return "NULL", nil
 }
 
-func toByteString(v driver.Value) (string, error) {
+func toByteString(v Value) (string, error) {
 	switch val := v.(type) {
 	case []uint8:
 		return toQuotedString(string(val))
@@ -266,7 +265,7 @@ func toByteString(v driver.Value) (string, error) {
 	}
 }
 
-func toDateTimeString(v driver.Value) (string, error) {
+func toDateTimeString(v Value) (string, error) {
 	switch val := v.(type) {
 	case Time:
 		return toQuotedString(fmt.Sprintf("%02d:%02d:%02d", val.Hour, val.Min, val.Sec))
@@ -293,11 +292,11 @@ var toMonetMappers = map[string]toMonetConverter{
 	"null":         toNull,
 	"[]uint8":      toByteString,
 	"time.Time":    toQuotedString,
-	"monetdb.Time": toDateTimeString,
-	"monetdb.Date": toDateTimeString,
+	"mapi.Time": toDateTimeString,
+	"mapi.Date": toDateTimeString,
 }
 
-func convertToGo(value, dataType string) (driver.Value, error) {
+func convertToGo(value, dataType string) (Value, error) {
 	if strings.TrimSpace(value) == "NULL" {
 		dataType = "NULL"
 	}
@@ -310,7 +309,7 @@ func convertToGo(value, dataType string) (driver.Value, error) {
 	return nil, fmt.Errorf("Type not supported: %s", dataType)
 }
 
-func convertToMonet(value driver.Value) (string, error) {
+func ConvertToMonet(value Value) (string, error) {
 	t := reflect.TypeOf(value)
 	n := "nil"
 	if t != nil {

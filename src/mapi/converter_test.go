@@ -2,18 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package monetdb
+package mapi
 
 import (
 	"bytes"
-	"database/sql/driver"
 	"testing"
 	"time"
 )
 
 func TestConvertToMonet(t *testing.T) {
 	type tc struct {
-		v driver.Value
+		v Value
 		e string
 	}
 	var tcs = []tc{
@@ -40,7 +39,7 @@ func TestConvertToMonet(t *testing.T) {
 	}
 
 	for _, c := range tcs {
-		s, err := convertToMonet(c.v)
+		s, err := ConvertToMonet(c.v)
 		if err != nil {
 			t.Errorf("Error converting value: %v -> %v", c.v, err)
 		} else if s != c.e {
@@ -53,7 +52,7 @@ func TestConvertToGo(t *testing.T) {
 	type tc struct {
 		v string
 		t string
-		e driver.Value
+		e Value
 	}
 	var tcs = []tc{
 		tc{"8", "tinyint", int8(8)},
@@ -101,7 +100,7 @@ func TestConvertToGo(t *testing.T) {
 	}
 }
 
-func compareByteArray(t *testing.T, val []byte, e driver.Value) bool {
+func compareByteArray(t *testing.T, val []byte, e Value) bool {
 	switch exp := e.(type) {
 	case []byte:
 		//lint:ignore S1004 prepare to enable staticchecks

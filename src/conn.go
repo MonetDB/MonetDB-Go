@@ -54,19 +54,9 @@ func (c *Conn) Begin() (driver.Tx, error) {
 	return t, t.err
 }
 
-func (c *Conn) cmd(cmd string) (string, error) {
-	if c.mapi == nil {
-		//lint:ignore ST1005 
-		return "", fmt.Errorf("Database connection closed")
-	}
-
-	return c.mapi.Cmd(cmd)
-}
-
 func (c *Conn) execute(query string) (string, error) {
 	if c.mapi == nil {
-		//lint:ignore ST1005 
-		return "", fmt.Errorf("Database connection closed")
+		return "", fmt.Errorf("monetdb: database connection is closed")
 	}
 	return c.mapi.Execute(query)
 }

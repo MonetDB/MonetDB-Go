@@ -20,6 +20,8 @@ We will create resultset, resultset schema and resultset metadata types. The cod
 
 We will also move the code for handling the connection config out of the driver.go source file. We want to separate the MonetDB specific implementation details from the more generic sql library code as much as possible. This will make the it easier to understand the implementation and easier to implement new interfaces.
 
+We will prefix the error messages with the package name. That way it is clear where the error message comes from, the driver implementation or the mapi library.
+
 #### Todo
 - [X] in driver.go move parsedsn function call inside newConn
 - [X] move tests from driver_test.go to new file after change to driver.open

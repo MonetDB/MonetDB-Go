@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-type Description struct {
+type TableElement struct {
 	ColumnName   string
 	ColumnType   string
 	DisplaySize  int
@@ -22,7 +22,7 @@ type Description struct {
 }
 
 type Metadata struct {
-	ExecId int
+	ExecId      int
 	LastRowId   int
 	RowCount    int
 	QueryId     int
@@ -34,7 +34,7 @@ type Value interface{}
 
 type ResultSet struct {
 	Metadata Metadata
-	Description []Description
+	Schema []TableElement
 	Rows [][]Value
 }
 
@@ -84,7 +84,7 @@ func (s *ResultSet) StoreResult(r string) error {
 			s.Metadata.Offset = 0
 			s.Rows = make([][]Value, 0)
 			s.Metadata.LastRowId = 0
-			s.Description = nil
+			s.Schema = nil
 			s.Metadata.RowCount = 0
 
 		} else if strings.HasPrefix(line, MAPI_MSG_QUPDATE) {
@@ -97,7 +97,7 @@ func (s *ResultSet) StoreResult(r string) error {
 			//lint:ignore S1019 prepare to enable staticchecks
 			s.Rows = make([][]Value, 0, 0)
 			s.Metadata.LastRowId = 0
-			s.Description = nil
+			s.Schema = nil
 			s.Metadata.RowCount = 0
 
 		} else if strings.HasPrefix(line, MAPI_MSG_HEADER) {
@@ -135,7 +135,7 @@ func (s *ResultSet) StoreResult(r string) error {
 				}
 			}
 
-			s.updateDescription(columnNames, columnTypes, displaySizes,
+			s.updateSchema(columnNames, columnTypes, displaySizes,
 				internalSizes, precisions, scales, nullOks)
 			s.Metadata.Offset = 0
 			s.Metadata.LastRowId = 0
@@ -144,25 +144,22 @@ func (s *ResultSet) StoreResult(r string) error {
 			return nil
 
 		} else if strings.HasPrefix(line, MAPI_MSG_ERROR) {
-			//lint:ignore ST1005 prepare to enable staticchecks
-			return fmt.Errorf("Database error: %s", line[1:])
+			return fmt.Errorf("mapi: database error: %s", line[1:])
 		}
 	}
 
-	//lint:ignore ST1005 prepare to enable staticchecks
-	return fmt.Errorf("Unknown state: %s", r)
+	return fmt.Errorf("mapi: unknown state: %s", r)
 }
 
 func (s *ResultSet) parseTuple(d string) ([]Value, error) {
 	items := strings.Split(d[1:len(d)-1], ",\t")
-	if len(items) != len(s.Description) {
-		//lint:ignore ST1005 prepare to enable staticchecks
-		return nil, fmt.Errorf("Length of row doesn't match header")
+	if len(items) != len(s.Schema) {
+		return nil, fmt.Errorf("mapi: length of row doesn't match header")
 	}
 
 	v := make([]Value, len(items))
 	for i, value := range items {
-		vv, err := s.convert(value, s.Description[i].ColumnType)
+		vv, err := s.convert(value, s.Schema[i].ColumnType)
 		if err != nil {
 			return nil, err
 		}
@@ -171,14 +168,14 @@ func (s *ResultSet) parseTuple(d string) ([]Value, error) {
 	return v, nil
 }
 
-func (s *ResultSet) updateDescription(
+func (s *ResultSet) updateSchema(
 	columnNames, columnTypes []string, displaySizes,
 	internalSizes, precisions, scales, nullOks []int) {
 
-	d := make([]Description, len(columnNames))
+	d := make([]TableElement, len(columnNames))
 	//lint:ignore S1005 prepare to enable staticchecks
 	for i, _ := range columnNames {
-		desc := Description{
+		desc := TableElement{
 			ColumnName:   columnNames[i],
 			ColumnType:   columnTypes[i],
 			DisplaySize:  displaySizes[i],
@@ -190,7 +187,7 @@ func (s *ResultSet) updateDescription(
 		d[i] = desc
 	}
 
-	s.Description = d
+	s.Schema = d
 }
 
 func (s *ResultSet) convert(value, dataType string) (Value, error) {

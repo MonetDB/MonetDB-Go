@@ -80,14 +80,17 @@ func (s *Stmt) Query(args []driver.Value) (driver.Rows, error) {
 		return rows, rows.err
 	}
 
-	//lint:ignore SA4006 prepare to enable staticchecks
 	err = s.resultset.StoreResult(r)
+	if err != nil {
+		rows.err = err
+		return rows, rows.err
+	}
 	rows.queryId = s.resultset.Metadata.QueryId
 	rows.lastRowId = s.resultset.Metadata.LastRowId
 	rows.rowCount = s.resultset.Metadata.RowCount
 	rows.offset = s.resultset.Metadata.Offset
 	rows.rows = s.copyRows(s.resultset.Rows)
-	rows.description = s.resultset.Description
+	rows.schema = s.resultset.Schema
 
 	return rows, rows.err
 }

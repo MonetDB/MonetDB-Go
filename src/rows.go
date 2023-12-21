@@ -13,19 +13,17 @@ import (
 )
 
 type Rows struct {
-	stmt   *Stmt
-	active bool
-
-	queryId int
-
-	err error
+	stmt        *Stmt
+	active      bool
+	queryId     int
+	err         error
 
 	rowNum      int
 	offset      int
 	lastRowId   int
 	rowCount    int
 	rows        [][]driver.Value
-	description []mapi.Description
+	schema      []mapi.TableElement
 	columns     []string
 }
 
@@ -42,8 +40,8 @@ func newRows(s *Stmt) *Rows {
 
 func (r *Rows) Columns() []string {
 	if r.columns == nil {
-		r.columns = make([]string, len(r.description))
-		for i, d := range r.description {
+		r.columns = make([]string, len(r.schema))
+		for i, d := range r.schema {
 			r.columns[i] = d.ColumnName
 		}
 	}
@@ -57,10 +55,10 @@ func (r *Rows) Close() error {
 
 func (r *Rows) Next(dest []driver.Value) error {
 	if !r.active {
-		return fmt.Errorf("Rows closed")
+		return fmt.Errorf("monetdb: rows closed")
 	}
 	if r.queryId == -1 {
-		return fmt.Errorf("Query didn't result in a resultset")
+		return fmt.Errorf("monetdb: query didn't result in a resultset")
 	}
 
 	if r.rowNum >= r.rowCount {
@@ -107,15 +105,14 @@ func (r *Rows) fetchNext() error {
 	end := min(r.rowCount, r.rowNum+c_ARRAY_SIZE)
 	amount := end - r.offset
 
-	cmd := fmt.Sprintf("Xexport %d %d %d", r.queryId, r.offset, amount)
-	res, err := r.stmt.conn.cmd(cmd)
+	res, err := r.stmt.conn.mapi.FetchNext(r.queryId, r.offset, amount)
 	if err != nil {
 		return err
 	}
 
 	r.stmt.resultset.StoreResult(res)
 	r.rows = r.stmt.copyRows(r.stmt.resultset.Rows)
-	r.description = r.stmt.resultset.Description
+	r.schema = r.stmt.resultset.Schema
 
 	return nil
 }

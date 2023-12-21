@@ -103,14 +103,18 @@ func (c *MapiConn) Disconnect() {
 
 func (c *MapiConn) Execute(query string) (string, error) {
 	cmd := fmt.Sprintf("s%s;", query)
-	return c.Cmd(cmd)
+	return c.cmd(cmd)
+}
+
+func (c *MapiConn) FetchNext(queryId int, offset int, amount int) (string, error) {
+	cmd := fmt.Sprintf("Xexport %d %d %d", queryId, offset, amount)
+	return c.cmd(cmd)
 }
 
 // Cmd sends a MAPI command to MonetDB.
-func (c *MapiConn) Cmd(operation string) (string, error) {
+func (c *MapiConn) cmd(operation string) (string, error) {
 	if c.State != MAPI_STATE_READY {
-		//lint:ignore ST1005 prepare to enable staticchecks
-		return "", fmt.Errorf("Database not connected")
+		return "", fmt.Errorf("mapi: database is not connected")
 	}
 
 	if err := c.putBlock([]byte(operation)); err != nil {
@@ -131,18 +135,16 @@ func (c *MapiConn) Cmd(operation string) (string, error) {
 
 	} else if resp == mapi_MSG_MORE {
 		// tell server it isn't going to get more
-		return c.Cmd("")
+		return c.cmd("")
 
 	} else if strings.HasPrefix(resp, MAPI_MSG_Q) || strings.HasPrefix(resp, MAPI_MSG_HEADER) || strings.HasPrefix(resp, MAPI_MSG_TUPLE) {
 		return resp, nil
 
 	} else if strings.HasPrefix(resp, MAPI_MSG_ERROR) {
-		//lint:ignore ST1005 prepare to enable staticchecks
-		return "", fmt.Errorf("Operational error: %s", resp[1:])
+		return "", fmt.Errorf("mapi: operational error: %s", resp[1:])
 
 	} else {
-		//lint:ignore ST1005 prepare to enable staticchecks
-		return "", fmt.Errorf("Unknown state: %s", resp)
+		return "", fmt.Errorf("mapi: unknown state: %s", resp)
 	}
 }
 
@@ -212,8 +214,7 @@ func (c *MapiConn) tryLogin(iteration int) error {
 
 	} else if strings.HasPrefix(prompt, MAPI_MSG_ERROR) {
 		// TODO log error
-		//lint:ignore ST1005 prepare to enable staticchecks
-		return fmt.Errorf("Database error: %s", prompt[1:])
+		return fmt.Errorf("mapi: database error: %s", prompt[1:])
 
 	} else if strings.HasPrefix(prompt, MAPI_MSG_REDIRECT) {
 		t := strings.Split(prompt, " ")
@@ -224,8 +225,7 @@ func (c *MapiConn) tryLogin(iteration int) error {
 			if iteration <= 10 {
 				c.tryLogin(iteration + 1)
 			} else {
-				//lint:ignore ST1005 prepare to enable staticchecks
-				return fmt.Errorf("Maximal number of redirects reached (10)")
+				return fmt.Errorf("mapi: maximal number of redirects reached (10)")
 			}
 
 		} else if r[1] == "monetdb" {
@@ -238,12 +238,10 @@ func (c *MapiConn) tryLogin(iteration int) error {
 			c.Connect()
 
 		} else {
-			//lint:ignore ST1005 prepare to enable staticchecks
-			return fmt.Errorf("Unknown redirect: %s", prompt)
+			return fmt.Errorf("mapi: unknown redirect: %s", prompt)
 		}
 	} else {
-		//lint:ignore ST1005 prepare to enable staticchecks
-		return fmt.Errorf("Unknown state: %s", prompt)
+		return fmt.Errorf("mapi: unknown state: %s", prompt)
 	}
 
 	c.State = MAPI_STATE_READY
@@ -260,8 +258,7 @@ func (c *MapiConn) challengeResponse(challenge []byte) (string, error) {
 	algo := t[5]
 
 	if protocol != "9" {
-		//lint:ignore ST1005 prepare to enable staticchecks
-		return "", fmt.Errorf("We only speak protocol v9")
+		return "", fmt.Errorf("mapi: we only speak protocol v9")
 	}
 
 	var h hash.Hash
@@ -269,8 +266,7 @@ func (c *MapiConn) challengeResponse(challenge []byte) (string, error) {
 		h = crypto.SHA512.New()
 	} else {
 		// TODO support more algorithm
-		//lint:ignore ST1005 prepare to enable staticchecks
-		return "", fmt.Errorf("Unsupported algorithm: %s", algo)
+		return "", fmt.Errorf("mapi: unsupported algorithm: %s", algo)
 	}
 	io.WriteString(h, c.Password)
 	p := fmt.Sprintf("%x", h.Sum(nil))
@@ -290,8 +286,7 @@ func (c *MapiConn) challengeResponse(challenge []byte) (string, error) {
 		pwhash = fmt.Sprintf("{MD5}%x", h.Sum(nil))
 
 	} else {
-		//lint:ignore ST1005 prepare to enable staticchecks
-		return "", fmt.Errorf("Unsupported hash algorithm required for login %s", hashes)
+		return "", fmt.Errorf("mapi: unsupported hash algorithm required for login %s", hashes)
 	}
 
 	r := fmt.Sprintf("BIG:%s:%s:%s:%s:", c.Username, pwhash, c.Language, c.Database)

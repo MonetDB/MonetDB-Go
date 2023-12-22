@@ -116,3 +116,7 @@ func (r *Rows) fetchNext() error {
 
 	return nil
 }
+
+func (r *Rows) ColumnTypeLength(index int) (length int64, ok bool) {
+	return int64(r.schema[index].InternalSize), true
+}

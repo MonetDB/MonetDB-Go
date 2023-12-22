@@ -30,6 +30,7 @@ func newConn(name string) (*Conn, error) {
 	}
 
 	conn.mapi = m
+	m.SetSizeHeader(true)
 	return conn, nil
 }
 

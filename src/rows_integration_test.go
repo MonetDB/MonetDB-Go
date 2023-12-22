@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- package monetdb
+package monetdb
 
- import (
-	 "database/sql"
-	 "testing"
- )
+import (
+	"database/sql"
+	"testing"
+)
  
 func TestRowsIntegration(t *testing.T) {
 	if testing.Short() {
@@ -140,6 +140,89 @@ func TestRowsIntegration(t *testing.T) {
 		}
 		if nRows != 0 {
 			t.Errorf("Unexpected number of rows %d", nRows)
+		}
+	})
+
+	defer db.Close()
+}
+
+func TestColumnTypeIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
+	db, err := sql.Open("monetdb", "monetdb:monetdb@localhost:50000/monetdb")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if pingErr := db.Ping(); pingErr != nil {
+		t.Fatal(pingErr)
+	}
+
+	t.Run("Exec create table", func(t *testing.T) {
+		_, err := db.Exec("create table test1 ( name varchar(16))")
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	t.Run("Exec insert row", func(t *testing.T) {
+		_, err := db.Exec("insert into test1 values ( 'name1' )")
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	t.Run("Get Columns", func(t *testing.T) {
+		rows, err := db.Query("select * from test1")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if rows == nil {
+			t.Fatal("empty result")
+		}
+		columnlist, err  := rows.Columns()
+		if err != nil {
+			t.Error(err)
+		}
+		for _, column := range columnlist {
+			if column != "name" {
+				t.Error("unexpected column name in Columns")
+			}
+		}
+		columntypes, err  := rows.ColumnTypes()
+		if err != nil {
+			t.Error(err)
+		}
+		for _, column := range columntypes {
+			if column.Name() != "name" {
+				t.Error("unexpected column name in ColumnTypes")
+			}
+			length, ok := column.Length()
+			if ok {
+				if length != 16 {
+					t.Error("unexpected column length in ColumnTypes")
+				}
+			} else {
+				t.Error("column length not available")
+			}
+		}
+		for rows.Next() {
+			var name string
+			if err := rows.Scan(&name); err != nil {
+			 t.Error(err)
+			}
+		}
+		if err := rows.Err(); err != nil {
+			t.Error(err)
+		}
+		defer rows.Close()
+	})
+
+	t.Run("Exec drop table", func(t *testing.T) {
+		_, err := db.Exec("drop table test1")
+		if err != nil {
+			t.Fatal(err)
 		}
 	})
 

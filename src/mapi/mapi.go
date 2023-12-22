@@ -111,6 +111,17 @@ func (c *MapiConn) FetchNext(queryId int, offset int, amount int) (string, error
 	return c.cmd(cmd)
 }
 
+func (c *MapiConn) SetSizeHeader(enable bool) (string, error) {
+	var sizeheader int
+	if enable {
+		sizeheader = 1
+	} else {
+		sizeheader = 0
+	}
+	cmd := fmt.Sprintf("Xsizeheader %d", sizeheader)
+	return c.cmd(cmd)
+}
+
 // Cmd sends a MAPI command to MonetDB.
 func (c *MapiConn) cmd(operation string) (string, error) {
 	if c.State != MAPI_STATE_READY {

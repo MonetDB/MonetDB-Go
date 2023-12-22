@@ -10,7 +10,7 @@ The current version, v1.1.0, implemented the Go v1.7 library interfaces. The lat
 
 ### Mapi
 
-[Mapi](https://www.monetdb.org/documentation-Jun2023/user-guide/client-interfaces/libraries-drivers/mapi-library/) is the API that provides the communication protocol with the MonetDB database.
+[Mapi](https://www.monetdb.org/documentation-Jun2023/user-guide/client-interfaces/libraries-drivers/mapi-library/) is the API that provides the communication protocol with the MonetDB database. To improve the mapi protocol implementation in this library, check the documentation in the [PHP](https://github.com/MonetDB/MonetDB-PHP/tree/master/protocol_doc) driver.
 
 ### Refactoring
 

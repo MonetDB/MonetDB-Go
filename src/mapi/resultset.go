@@ -133,6 +133,23 @@ func (s *ResultSet) StoreResult(r string) error {
 						scales[j] = sizes[j][1]
 					}
 				}
+			} else if identity == "length" {
+				sizes := make([][]int, len(values))
+				for i, value := range values {
+					s := make([]int, 0)
+					for _, v := range strings.Split(value, " ") {
+						val, _ := strconv.Atoi(v)
+						s = append(s, val)
+					}
+					displaySizes[i] = s[0]
+					sizes = append(sizes, s)
+				}
+				for j, t := range columnTypes {
+					if t == "decimal" {
+						precisions[j] = sizes[j][0]
+						scales[j] = sizes[j][1]
+					}
+				}
 			}
 
 			s.updateSchema(columnNames, columnTypes, displaySizes,

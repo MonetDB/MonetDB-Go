@@ -8,6 +8,10 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"io"
+	"math"
+	"strings"
+	"reflect"
+	"time"
 
 	"github.com/MonetDB/MonetDB-Go/src/mapi"
 )
@@ -117,6 +121,89 @@ func (r *Rows) fetchNext() error {
 	return nil
 }
 
+// See https://pkg.go.dev/database/sql/driver#RowsColumnTypeLength for what to implement
+// This implies that we need to return the InternalSize value, not the DisplaySize
 func (r *Rows) ColumnTypeLength(index int) (length int64, ok bool) {
-	return int64(r.schema[index].InternalSize), true
+	switch r.schema[index].ColumnType {
+	case mapi.MDB_VARCHAR,
+		mapi.MDB_CHAR :
+		return int64(r.schema[index].InternalSize), true
+	case mapi.MDB_BLOB,
+		mapi.MDB_CLOB :
+		return math.MaxInt64, true
+	default:
+		return 0, false
+	}
+}
+
+// See https://pkg.go.dev/database/sql/driver#RowsColumnTypeDatabaseTypeName for what to implement
+func (r *Rows) ColumnTypeDatabaseTypeName(index int) string {
+	return strings.ToUpper(r.schema[index].ColumnType)
+}
+
+// For now it seems that the mapi protocol does not provide the required information
+func (r *Rows) ColumnTypeNullable(index int) (nullable, ok bool) {
+	return false, false
+}
+
+// See https://pkg.go.dev/database/sql/driver#RowsColumnTypePrecisionScale for what to implement
+func (r *Rows) RowsColumnTypePrecisionScale(index int) (precision, scale int64, ok bool) {
+	switch r.schema[index].ColumnType {
+	case mapi.MDB_DECIMAL :
+		return int64(r.schema[index].Precision), int64(r.schema[index].Scale), true
+	default:
+		return 0, 0, false
+	}
+}
+
+// See https://pkg.go.dev/database/sql/driver#RowsColumnTypeScanType for what to implement
+func (r *Rows) ColumnTypeScanType(index int) reflect.Type {
+	var scantype reflect.Type
+
+	switch r.schema[index].ColumnType {
+	case mapi.MDB_VARCHAR,
+		mapi.MDB_CHAR,
+		mapi.MDB_CLOB,
+		mapi.MDB_INTERVAL,
+		mapi.MDB_MONTH_INTERVAL,
+		mapi.MDB_SEC_INTERVAL :
+		scantype = reflect.TypeOf("")
+	case mapi.MDB_NULL :
+		scantype = reflect.TypeOf(nil)
+	case mapi.MDB_BLOB :
+		scantype = reflect.TypeOf(nil)
+	case mapi.MDB_BOOLEAN :
+		scantype = reflect.TypeOf(true)
+	case mapi.MDB_REAL,
+		mapi.MDB_FLOAT :
+		scantype = reflect.TypeOf(float32(0))
+	case mapi.MDB_DECIMAL,
+		mapi.MDB_DOUBLE :
+		scantype = reflect.TypeOf(float64(0))
+	case mapi.MDB_TINYINT :
+		scantype = reflect.TypeOf(int8(0))
+	case mapi.MDB_SHORTINT,
+		mapi.MDB_SMALLINT :
+		scantype = reflect.TypeOf(int16(0))
+	case mapi.MDB_INT,
+		mapi.MDB_MEDIUMINT,
+		mapi.MDB_WRD :
+		scantype = reflect.TypeOf(int32(0))
+	case mapi.MDB_BIGINT,
+		mapi.MDB_HUGEINT,
+		mapi.MDB_SERIAL,
+		mapi.MDB_LONGINT :
+		scantype = reflect.TypeOf(int64(0))
+	case mapi.MDB_DATE :
+		scantype = reflect.TypeOf(time.Time{})
+	case mapi.MDB_TIME :
+		scantype = reflect.TypeOf(time.Time{})
+	case mapi.MDB_TIMESTAMP :
+		scantype = reflect.TypeOf(time.Time{})
+	case mapi.MDB_TIMESTAMPTZ :
+		scantype = reflect.TypeOf(time.Time{})
+	default:
+		scantype = reflect.TypeOf(nil)
+	}
+	return scantype
 }

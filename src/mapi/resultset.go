@@ -48,15 +48,15 @@ func (s *ResultSet) StoreResult(r string) error {
 	var nullOks []int
 
 	for _, line := range strings.Split(r, "\n") {
-		if strings.HasPrefix(line, MAPI_MSG_INFO) {
+		if strings.HasPrefix(line, mapi_MSG_INFO) {
 			// TODO log
 
-		} else if strings.HasPrefix(line, MAPI_MSG_QPREPARE) {
+		} else if strings.HasPrefix(line, mapi_MSG_QPREPARE) {
 			t := strings.Split(strings.TrimSpace(line[2:]), " ")
 			s.Metadata.ExecId, _ = strconv.Atoi(t[0])
 			return nil
 
-		} else if strings.HasPrefix(line, MAPI_MSG_QTABLE) {
+		} else if strings.HasPrefix(line, mapi_MSG_QTABLE) {
 			t := strings.Split(strings.TrimSpace(line[2:]), " ")
 			s.Metadata.QueryId, _ = strconv.Atoi(t[0])
 			s.Metadata.RowCount, _ = strconv.Atoi(t[1])
@@ -70,37 +70,36 @@ func (s *ResultSet) StoreResult(r string) error {
 			scales = make([]int, s.Metadata.ColumnCount)
 			nullOks = make([]int, s.Metadata.ColumnCount)
 
-		} else if strings.HasPrefix(line, MAPI_MSG_TUPLE) {
+		} else if strings.HasPrefix(line, mapi_MSG_TUPLE) {
 			v, err := s.parseTuple(line)
 			if err != nil {
 				return err
 			}
 			s.Rows = append(s.Rows, v)
 
-		} else if strings.HasPrefix(line, MAPI_MSG_QBLOCK) {
+		} else if strings.HasPrefix(line, mapi_MSG_QBLOCK) {
 			s.Rows = make([][]Value, 0)
 
-		} else if strings.HasPrefix(line, MAPI_MSG_QSCHEMA) {
+		} else if strings.HasPrefix(line, mapi_MSG_QSCHEMA) {
 			s.Metadata.Offset = 0
 			s.Rows = make([][]Value, 0)
 			s.Metadata.LastRowId = 0
 			s.Schema = nil
 			s.Metadata.RowCount = 0
 
-		} else if strings.HasPrefix(line, MAPI_MSG_QUPDATE) {
+		} else if strings.HasPrefix(line, mapi_MSG_QUPDATE) {
 			t := strings.Split(strings.TrimSpace(line[2:]), " ")
 			s.Metadata.RowCount, _ = strconv.Atoi(t[0])
 			s.Metadata.LastRowId, _ = strconv.Atoi(t[1])
 
-		} else if strings.HasPrefix(line, MAPI_MSG_QTRANS) {
+		} else if strings.HasPrefix(line, mapi_MSG_QTRANS) {
 			s.Metadata.Offset = 0
-			//lint:ignore S1019 prepare to enable staticchecks
-			s.Rows = make([][]Value, 0, 0)
+			s.Rows = make([][]Value, 0)
 			s.Metadata.LastRowId = 0
 			s.Schema = nil
 			s.Metadata.RowCount = 0
 
-		} else if strings.HasPrefix(line, MAPI_MSG_HEADER) {
+		} else if strings.HasPrefix(line, mapi_MSG_HEADER) {
 			t := strings.Split(line[1:], "#")
 			data := strings.TrimSpace(t[0])
 			identity := strings.TrimSpace(t[1])
@@ -157,10 +156,10 @@ func (s *ResultSet) StoreResult(r string) error {
 			s.Metadata.Offset = 0
 			s.Metadata.LastRowId = 0
 
-		} else if strings.HasPrefix(line, MAPI_MSG_PROMPT) {
+		} else if strings.HasPrefix(line, mapi_MSG_PROMPT) {
 			return nil
 
-		} else if strings.HasPrefix(line, MAPI_MSG_ERROR) {
+		} else if strings.HasPrefix(line, mapi_MSG_ERROR) {
 			return fmt.Errorf("mapi: database error: %s", line[1:])
 		}
 	}
@@ -190,10 +189,9 @@ func (s *ResultSet) updateSchema(
 	internalSizes, precisions, scales, nullOks []int) {
 
 	d := make([]TableElement, len(columnNames))
-	//lint:ignore S1005 prepare to enable staticchecks
-	for i, _ := range columnNames {
+	for i, columnName := range columnNames {
 		desc := TableElement{
-			ColumnName:   columnNames[i],
+			ColumnName:   columnName,
 			ColumnType:   columnTypes[i],
 			DisplaySize:  displaySizes[i],
 			InternalSize: internalSizes[i],

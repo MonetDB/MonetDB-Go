@@ -187,7 +187,7 @@ func TestColumnTypeIntegration(t *testing.T) {
 		}
 		for _, column := range columnlist {
 			if column != "name" {
-				t.Error("unexpected column name in Columns")
+				t.Errorf("unexpected column name in Columns")
 			}
 		}
 		columntypes, err  := rows.ColumnTypes()
@@ -196,15 +196,31 @@ func TestColumnTypeIntegration(t *testing.T) {
 		}
 		for _, column := range columntypes {
 			if column.Name() != "name" {
-				t.Error("unexpected column name in ColumnTypes")
+				t.Errorf("unexpected column name in ColumnTypes")
 			}
-			length, ok := column.Length()
-			if ok {
+			length, length_ok := column.Length()
+			if length_ok {
 				if length != 16 {
-					t.Error("unexpected column length in ColumnTypes")
+					t.Errorf("unexpected column length in ColumnTypes")
 				}
 			} else {
 				t.Error("column length not available")
+			}
+			_, nullable_ok := column.Nullable()
+			if nullable_ok {
+				t.Errorf("not expected that decimal size was provided")
+			}
+			coltype := column.DatabaseTypeName()
+			if coltype != "VARCHAR" {
+				t.Errorf("unexpected column type")
+			}
+			scantype := column.ScanType()
+			if scantype.Name() != "string" {
+				t.Errorf("unexpected scan type")
+			}
+			_, _, ok := column.DecimalSize()
+			if ok {
+				t.Errorf("not expected that decimal size was provided")
 			}
 		}
 		for rows.Next() {

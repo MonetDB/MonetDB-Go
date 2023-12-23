@@ -26,7 +26,12 @@ We will prefix the error messages with the package name. That way it is clear wh
 - [X] in driver.go move parsedsn function call inside newConn
 - [X] move tests from driver_test.go to new file after change to driver.open
 - [X] move config type from driver.go
-- [ ] Conn struct doesn't need a config field
+- [X] Conn struct doesn't need a config field
+- [ ] set_autocommit (see: [pymonetdb](https://github.com/MonetDB/pymonetdb/blob/master/pymonetdb/sql/connections.py#L156C16-L156C16))
+- [ ] change_replysize
+- [ ] set_timezone
+- [ ] set_uploader
+- [ ] set_downloader
 
 ### Logging
 

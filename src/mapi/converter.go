@@ -14,50 +14,50 @@ import (
 )
 
 const (
-	mdb_CHAR      = "char"    // (L) character string with length L
-	mdb_VARCHAR   = "varchar" // (L) string with atmost length L
-	mdb_CLOB      = "clob"
-	mdb_BLOB      = "blob"
-	mdb_DECIMAL   = "decimal"  // (P,S)
-	mdb_SMALLINT  = "smallint" // 16 bit integer
-	mdb_INT       = "int"      // 32 bit integer
-	mdb_BIGINT    = "bigint"   // 64 bit integer
-	mdb_HUGEINT   = "hugeint"  // 64 bit integer
-	mdb_SERIAL    = "serial"   // special 64 bit integer sequence generator
-	mdb_REAL      = "real"     // 32 bit floating point
-	mdb_DOUBLE    = "double"   // 64 bit floating point
-	mdb_BOOLEAN   = "boolean"
-	mdb_DATE      = "date"
-	mdb_NULL      = "NULL"
-	mdb_TIME      = "time"      // (T) time of day
-	mdb_TIMESTAMP = "timestamp" // (T) date concatenated with unique time
-	mdb_INTERVAL  = "interval"  // (Q) a temporal interval
+	MDB_CHAR      = "char"    // (L) character string with length L
+	MDB_VARCHAR   = "varchar" // (L) string with atmost length L
+	MDB_CLOB      = "clob"
+	MDB_BLOB      = "blob"
+	MDB_DECIMAL   = "decimal"  // (P,S)
+	MDB_SMALLINT  = "smallint" // 16 bit integer
+	MDB_INT       = "int"      // 32 bit integer
+	MDB_BIGINT    = "bigint"   // 64 bit integer
+	MDB_HUGEINT   = "hugeint"  // 64 bit integer
+	MDB_SERIAL    = "serial"   // special 64 bit integer sequence generator
+	MDB_REAL      = "real"     // 32 bit floating point
+	MDB_DOUBLE    = "double"   // 64 bit floating point
+	MDB_BOOLEAN   = "boolean"
+	MDB_DATE      = "date"
+	MDB_NULL      = "NULL"
+	MDB_TIME      = "time"      // (T) time of day
+	MDB_TIMESTAMP = "timestamp" // (T) date concatenated with unique time
+	MDB_INTERVAL  = "interval"  // (Q) a temporal interval
 
-	mdb_MONTH_INTERVAL = "month_interval"
-	mdb_SEC_INTERVAL   = "sec_interval"
-	mdb_WRD            = "wrd"
-	mdb_TINYINT        = "tinyint"
+	MDB_MONTH_INTERVAL = "month_interval"
+	MDB_SEC_INTERVAL   = "sec_interval"
+	MDB_WRD            = "wrd"
+	MDB_TINYINT        = "tinyint"
 
 	// Not on the website:
-	mdb_SHORTINT    = "shortint"
-	mdb_MEDIUMINT   = "mediumint"
-	mdb_LONGINT     = "longint"
-	mdb_FLOAT       = "float"
-	mdb_TIMESTAMPTZ = "timestamptz"
+	MDB_SHORTINT    = "shortint"
+	MDB_MEDIUMINT   = "mediumint"
+	MDB_LONGINT     = "longint"
+	MDB_FLOAT       = "float"
+	MDB_TIMESTAMPTZ = "timestamptz"
 
 	// full names and aliases, spaces are replaced with underscores
 	//lint:ignore U1000 prepare to enable staticchecks
-	mdb_CHARACTER               = mdb_CHAR
+	mdb_CHARACTER               = MDB_CHAR
 	//lint:ignore U1000 prepare to enable staticchecks
-	mdb_CHARACTER_VARYING       = mdb_VARCHAR
+	mdb_CHARACTER_VARYING       = MDB_VARCHAR
 	//lint:ignore U1000 prepare to enable staticchecks
-	mdb_CHARACHTER_LARGE_OBJECT = mdb_CLOB
+	mdb_CHARACHTER_LARGE_OBJECT = MDB_CLOB
 	//lint:ignore U1000 prepare to enable staticchecks
-	mdb_BINARY_LARGE_OBJECT     = mdb_BLOB
+	mdb_BINARY_LARGE_OBJECT     = MDB_BLOB
 	//lint:ignore U1000 prepare to enable staticchecks
-	mdb_NUMERIC                 = mdb_DECIMAL
+	mdb_NUMERIC                 = MDB_DECIMAL
 	//lint:ignore U1000 prepare to enable staticchecks
-	mdb_DOUBLE_PRECISION        = mdb_DOUBLE
+	mdb_DOUBLE_PRECISION        = MDB_DOUBLE
 )
 
 var timeFormats = []string{
@@ -211,33 +211,33 @@ func toTimestampTz(v string) (Value, error) {
 }
 
 var toGoMappers = map[string]toGoConverter{
-	mdb_CHAR:           strip,
-	mdb_VARCHAR:        strip,
-	mdb_CLOB:           strip,
-	mdb_BLOB:           toByteArray,
-	mdb_DECIMAL:        toDouble,
-	mdb_NULL:           toNil,
-	mdb_SMALLINT:       toInt16,
-	mdb_INT:            toInt32,
-	mdb_WRD:            toInt32,
-	mdb_BIGINT:         toInt64,
-	mdb_HUGEINT:        toInt64,
-	mdb_SERIAL:         toInt64,
-	mdb_REAL:           toFloat,
-	mdb_DOUBLE:         toDouble,
-	mdb_BOOLEAN:        toBool,
-	mdb_DATE:           toDate,
-	mdb_TIME:           toTime,
-	mdb_TIMESTAMP:      toTimestamp,
-	mdb_TIMESTAMPTZ:    toTimestampTz,
-	mdb_INTERVAL:       strip,
-	mdb_MONTH_INTERVAL: strip,
-	mdb_SEC_INTERVAL:   strip,
-	mdb_TINYINT:        toInt8,
-	mdb_SHORTINT:       toInt16,
-	mdb_MEDIUMINT:      toInt32,
-	mdb_LONGINT:        toInt64,
-	mdb_FLOAT:          toFloat,
+	MDB_CHAR:           strip,
+	MDB_VARCHAR:        strip,
+	MDB_CLOB:           strip,
+	MDB_BLOB:           toByteArray,
+	MDB_DECIMAL:        toDouble,
+	MDB_NULL:           toNil,
+	MDB_SMALLINT:       toInt16,
+	MDB_INT:            toInt32,
+	MDB_WRD:            toInt32,
+	MDB_BIGINT:         toInt64,
+	MDB_HUGEINT:        toInt64,
+	MDB_SERIAL:         toInt64,
+	MDB_REAL:           toFloat,
+	MDB_DOUBLE:         toDouble,
+	MDB_BOOLEAN:        toBool,
+	MDB_DATE:           toDate,
+	MDB_TIME:           toTime,
+	MDB_TIMESTAMP:      toTimestamp,
+	MDB_TIMESTAMPTZ:    toTimestampTz,
+	MDB_INTERVAL:       strip,
+	MDB_MONTH_INTERVAL: strip,
+	MDB_SEC_INTERVAL:   strip,
+	MDB_TINYINT:        toInt8,
+	MDB_SHORTINT:       toInt16,
+	MDB_MEDIUMINT:      toInt32,
+	MDB_LONGINT:        toInt64,
+	MDB_FLOAT:          toFloat,
 }
 
 func toString(v Value) (string, error) {

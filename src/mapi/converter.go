@@ -66,6 +66,7 @@ var timeFormats = []string{
 	"2006-01-02 15:04:05 -0700",
 	"2006-01-02 15:04:05 -0700 MST",
 	"Mon Jan 2 15:04:05 -0700 MST 2006",
+	"2006-01-02 15:04:05.999999+00:00",
 	"15:04:05",
 }
 
@@ -260,8 +261,7 @@ func toByteString(v Value) (string, error) {
 	case []uint8:
 		return toQuotedString(string(val))
 	default:
-		//lint:ignore ST1005 prepare to enable staticchecks
-		return "", fmt.Errorf("Unsupported type")
+		return "", fmt.Errorf("unsupported type")
 	}
 }
 

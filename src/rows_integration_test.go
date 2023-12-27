@@ -6,6 +6,7 @@ package monetdb
 
 import (
 	"database/sql"
+	"math"
 	"testing"
 )
  
@@ -146,7 +147,8 @@ func TestRowsIntegration(t *testing.T) {
 	defer db.Close()
 }
 
-func TestColumnTypeIntegration(t *testing.T) {
+
+func TestColumnTypesIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test")
 	}
@@ -159,88 +161,256 @@ func TestColumnTypeIntegration(t *testing.T) {
 		t.Fatal(pingErr)
 	}
 
-	t.Run("Exec create table", func(t *testing.T) {
-		_, err := db.Exec("create table test1 ( name varchar(16))")
-		if err != nil {
-			t.Fatal(err)
-		}
-	})
+	type coltypetest struct {
+		ct    string
+		it    string
+		cs    string
+		cn  []string
+		lok []bool
+		cl  []int64
+		nok []bool
+		ctn []string
+		st  []string
+		ds  []bool
+		dsp []int64
+		dss []int64
+		dt   string
+	}
 
-	t.Run("Exec insert row", func(t *testing.T) {
-		_, err := db.Exec("insert into test1 values ( 'name1' )")
-		if err != nil {
-			t.Fatal(err)
-		}
-	})
+	var ctl = []coltypetest{
+		{
+			"create table test1 ( name varchar(16))",
+			"insert into test1 values ( 'name1' )",
+			"select * from test1",
+			[]string{"name"},
+			[]bool{true},
+			[]int64{16},
+			[]bool{false},
+			[]string{"VARCHAR"},
+			[]string{"string"},
+			[]bool{false},
+			[]int64{0, 0},
+			[]int64{0, 0},
+			"drop table test1",
+		},
+		{
+			"create table test1 ( value int)",
+			"insert into test1 values ( 25 )",
+			"select * from test1",
+			[]string{"value"},
+			[]bool{false},
+			[]int64{0},
+			[]bool{false},
+			[]string{"INT"},
+			[]string{"int32"},
+			[]bool{false},
+			[]int64{0, 0},
+			[]int64{0, 0},
+			"drop table test1",
+		},
+		{
+			"create table test1 ( name varchar(16), value int)",
+			"insert into test1 values ( 'name1', 25 )",
+			"select * from test1",
+			[]string{"name", "value"},
+			[]bool{true, false},
+			[]int64{16, 0},
+			[]bool{false, false},
+			[]string{"VARCHAR", "INT"},
+			[]string{"string", "int32"},
+			[]bool{false, false},
+			[]int64{0, 0},
+			[]int64{0, 0},
+			"drop table test1",
+		},
+		{
+			"create table test1 ( name varchar(32), value bigint)",
+			"insert into test1 values ( 'name1', 25 )",
+			"select * from test1",
+			[]string{"name", "value"},
+			[]bool{true, false},
+			[]int64{32, 0},
+			[]bool{false, false},
+			[]string{"VARCHAR", "BIGINT"},
+			[]string{"string", "int64"},
+			[]bool{false, false},
+			[]int64{0, 0},
+			[]int64{0, 0},
+			"drop table test1",
+		},
+		{
+			"create table test1 ( name blob, value boolean )",
+			"insert into test1 values ( x'1a2b3c4d5e', true )",
+			"select * from test1",
+			[]string{"name", "value"},
+			[]bool{true, false},
+			[]int64{math.MaxInt64, 0},
+			[]bool{false, false},
+			[]string{"BLOB", "BOOLEAN"},
+			[]string{"string", "bool"},
+			[]bool{false, false},
+			[]int64{0, 0},
+			[]int64{0, 0},
+			"drop table test1",
+		},
+		{
+			"create table test1 ( name real, value boolean)",
+			"insert into test1 values ( 1.2345, true )",
+			"select * from test1",
+			[]string{"name", "value"},
+			[]bool{false, false},
+			[]int64{0, 0},
+			[]bool{false, false},
+			[]string{"REAL", "BOOLEAN"},
+			[]string{"float32", "bool"},
+			[]bool{false, false},
+			[]int64{0, 0},
+			[]int64{0, 0},
+			"drop table test1",
+		},
+		{
+			"create table test1 ( name smallint, value double)",
+			"insert into test1 values ( 12, 1.2345 )",
+			"select * from test1",
+			[]string{"name", "value"},
+			[]bool{false, false},
+			[]int64{0, 0},
+			[]bool{false, false},
+			[]string{"SMALLINT", "DOUBLE"},
+			[]string{"int16", "float64"},
+			[]bool{false, false},
+			[]int64{0, 0},
+			[]int64{0, 0},
+			"drop table test1",
+		},
+		{
+			"create table test1 ( name decimal, value decimal(10, 5))",
+			"insert into test1 values ( 1.2345, 67.890 )",
+			"select * from test1",
+			[]string{"name", "value"},
+			[]bool{false, false},
+			[]int64{0, 0},
+			[]bool{false, false},
+			[]string{"DECIMAL", "DECIMAL"},
+			[]string{"float64", "float64"},
+			[]bool{true, true},
+			[]int64{18, 10},
+			[]int64{3, 5},
+			"drop table test1",
+		},
+		{
+			"create table test1 ( name timestamptz)",
+			"insert into test1 values ( current_timestamp() )",
+			"select * from test1",
+			[]string{"name"},
+			[]bool{false},
+			[]int64{0},
+			[]bool{false},
+			[]string{"TIMESTAMPTZ"},
+			[]string{"Time"},
+			[]bool{false},
+			[]int64{0},
+			[]int64{0},
+			"drop table test1",
+		},
+	}
 
-	t.Run("Get Columns", func(t *testing.T) {
-		rows, err := db.Query("select * from test1")
-		if err != nil {
-			t.Fatal(err)
-		}
-		if rows == nil {
-			t.Fatal("empty result")
-		}
-		columnlist, err  := rows.Columns()
-		if err != nil {
-			t.Error(err)
-		}
-		for _, column := range columnlist {
-			if column != "name" {
-				t.Errorf("unexpected column name in Columns")
+	for i := range ctl {
+		t.Run("Exec create table", func(t *testing.T) {
+			_, err := db.Exec(ctl[i].ct)
+			if err != nil {
+				t.Fatal(err)
 			}
-		}
-		columntypes, err  := rows.ColumnTypes()
-		if err != nil {
-			t.Error(err)
-		}
-		for _, column := range columntypes {
-			if column.Name() != "name" {
-				t.Errorf("unexpected column name in ColumnTypes")
+		})
+
+		t.Run("Exec insert row", func(t *testing.T) {
+			_, err := db.Exec(ctl[i].it)
+			if err != nil {
+				t.Fatal(err)
 			}
-			length, length_ok := column.Length()
-			if length_ok {
-				if length != 16 {
-					t.Errorf("unexpected column length in ColumnTypes")
+		})
+
+		t.Run("Get Columns", func(t *testing.T) {
+			rows, err := db.Query(ctl[i].cs)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if rows == nil {
+				t.Fatal("empty result")
+			}
+			columnlist, err  := rows.Columns()
+			if err != nil {
+				t.Error(err)
+			}
+			for j, column := range columnlist {
+				if column !=  ctl[i].cn[j]{
+					t.Errorf("unexpected column name in Columns: %s", column)
 				}
-			} else {
-				t.Error("column length not available")
 			}
-			_, nullable_ok := column.Nullable()
-			if nullable_ok {
-				t.Errorf("not expected that decimal size was provided")
+			columntypes, err  := rows.ColumnTypes()
+			if err != nil {
+				t.Error(err)
 			}
-			coltype := column.DatabaseTypeName()
-			if coltype != "VARCHAR" {
-				t.Errorf("unexpected column type")
+			for j, column := range columntypes {
+				if column.Name() != ctl[i].cn[j] {
+					t.Errorf("unexpected column name in ColumnTypes")
+				}
+				length, length_ok := column.Length()
+				if length_ok != ctl[i].lok[j] {
+					t.Errorf("unexpected value for length_ok")
+				} else {
+					if length_ok {
+						if length != ctl[i].cl[j] {
+							t.Errorf("unexpected column length in ColumnTypes")
+						}
+					}
+				}
+				_, nullable_ok := column.Nullable()
+				if nullable_ok != ctl[i].nok[j]{
+					t.Errorf("not expected that nullable was provided")
+				}
+				coltype := column.DatabaseTypeName()
+				if coltype != ctl[i].ctn[j] {
+					t.Errorf("unexpected column typename")
+				}
+				scantype := column.ScanType()
+				if scantype.Name() != ctl[i].st[j] {
+					t.Errorf("unexpected scan type: %s %s", scantype.Name(), ctl[i].st[j])
+				}
+				precision, scale, ok := column.DecimalSize()
+				if ok != ctl[i].ds[j]{
+					t.Errorf("not expected that decimal size was provided")
+				} else {
+					if ok {
+						if precision != ctl[i].dsp[j] {
+							t.Errorf("Unexpected value for precision")
+						}
+						if scale != ctl[i].dss[j] {
+							t.Errorf("unexpected value for scale")
+						}
+					}
+				}
 			}
-			scantype := column.ScanType()
-			if scantype.Name() != "string" {
-				t.Errorf("unexpected scan type")
+			/*
+			for rows.Next() {
+				name := make([]driver.Value, colcount)
+				if err := rows.Scan(&name); err != nil {
+				t.Error(err)
+				}
 			}
-			_, _, ok := column.DecimalSize()
-			if ok {
-				t.Errorf("not expected that decimal size was provided")
+			if err := rows.Err(); err != nil {
+				t.Error(err)
 			}
-		}
-		for rows.Next() {
-			var name string
-			if err := rows.Scan(&name); err != nil {
-			 t.Error(err)
-			}
-		}
-		if err := rows.Err(); err != nil {
-			t.Error(err)
-		}
-		defer rows.Close()
-	})
+			*/
+			defer rows.Close()
+		})
 
-	t.Run("Exec drop table", func(t *testing.T) {
-		_, err := db.Exec("drop table test1")
-		if err != nil {
-			t.Fatal(err)
-		}
-	})
-
+		t.Run("Exec drop table", func(t *testing.T) {
+			_, err := db.Exec(ctl[i].dt)
+			if err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
 	defer db.Close()
 }

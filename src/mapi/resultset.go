@@ -124,7 +124,7 @@ func (s *ResultSet) StoreResult(r string) error {
 						s = append(s, val)
 					}
 					internalSizes[i] = s[0]
-					sizes = append(sizes, s)
+					sizes[i] = s
 				}
 				for j, t := range columnTypes {
 					if t == "decimal" {
@@ -133,7 +133,6 @@ func (s *ResultSet) StoreResult(r string) error {
 					}
 				}
 			} else if identity == "length" {
-				sizes := make([][]int, len(values))
 				for i, value := range values {
 					s := make([]int, 0)
 					for _, v := range strings.Split(value, " ") {
@@ -141,13 +140,6 @@ func (s *ResultSet) StoreResult(r string) error {
 						s = append(s, val)
 					}
 					displaySizes[i] = s[0]
-					sizes = append(sizes, s)
-				}
-				for j, t := range columnTypes {
-					if t == "decimal" {
-						precisions[j] = sizes[j][0]
-						scales[j] = sizes[j][1]
-					}
 				}
 			}
 

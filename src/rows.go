@@ -171,7 +171,7 @@ func (r *Rows) ColumnTypeScanType(index int) reflect.Type {
 	case mapi.MDB_NULL :
 		scantype = reflect.TypeOf(nil)
 	case mapi.MDB_BLOB :
-		scantype = reflect.TypeOf("")
+		scantype = reflect.TypeOf([]uint8{0})
 	case mapi.MDB_BOOLEAN :
 		scantype = reflect.TypeOf(true)
 	case mapi.MDB_REAL,

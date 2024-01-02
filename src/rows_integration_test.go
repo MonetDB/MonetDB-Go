@@ -6,6 +6,7 @@ package monetdb
 
 import (
 	"database/sql"
+	"fmt"
 	"math"
 	"testing"
 )
@@ -162,19 +163,19 @@ func TestColumnTypesIntegration(t *testing.T) {
 	}
 
 	type coltypetest struct {
-		ct    string
-		it    string
-		cs    string
-		cn  []string
-		lok []bool
-		cl  []int64
-		nok []bool
-		ctn []string
-		st  []string
-		ds  []bool
-		dsp []int64
-		dss []int64
-		dt   string
+		ct    string // create table query
+		it    string // insert into query
+		cs    string // select star query
+		cn  []string // column names
+		lok []bool   // length value available
+		cl  []int64  // column lengths
+		nok []bool   // nullable available
+		ctn []string // column type name
+		st  []string // go type of column
+		ds  []bool   // decimal size available
+		dsp []int64  // decimal precision
+		dss []int64  // decimal scale
+		dt   string  // drop table query
 	}
 
 	var ctl = []coltypetest{
@@ -247,7 +248,7 @@ func TestColumnTypesIntegration(t *testing.T) {
 			[]int64{math.MaxInt64, 0},
 			[]bool{false, false},
 			[]string{"BLOB", "BOOLEAN"},
-			[]string{"string", "bool"},
+			[]string{"[]uint8", "bool"},
 			[]bool{false, false},
 			[]int64{0, 0},
 			[]int64{0, 0},
@@ -374,8 +375,15 @@ func TestColumnTypesIntegration(t *testing.T) {
 					t.Errorf("unexpected column typename")
 				}
 				scantype := column.ScanType()
-				if scantype.Name() != ctl[i].st[j] {
-					t.Errorf("unexpected scan type: %s %s", scantype.Name(), ctl[i].st[j])
+				// Not every type has a name. Then the name is the empty string. In that case, compare the types
+				if scantype.Name() != "" {
+					if scantype.Name() != ctl[i].st[j] {
+						t.Errorf("unexpected scan type: %s instead of %s", ctl[i].st[j], scantype.Name())
+					}
+				} else {
+					if fmt.Sprintf("%v", scantype) != ctl[i].st[j] {
+						t.Errorf("unexpected scan type: %s instead of %v", ctl[i].st[j], scantype)
+					}
 				}
 				precision, scale, ok := column.DecimalSize()
 				if ok != ctl[i].ds[j]{

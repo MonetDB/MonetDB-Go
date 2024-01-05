@@ -17,11 +17,19 @@ func newTx(c *Conn) *Tx {
 }
 
 func (t *Tx) Commit() error {
-	_, err := t.conn.execute("COMMIT")
+	err := executeStmt(t.conn, "COMMIT")
+	if err != nil {
+		t.err = err
+	}
+
 	return err
 }
 
 func (t *Tx) Rollback() error {
-	_, err := t.conn.execute("ROLLBACK")
+	err := executeStmt(t.conn, "ROLLBACK")
+	if err != nil {
+		t.err = err
+	}
+
 	return err
 }

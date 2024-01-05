@@ -220,3 +220,23 @@ func (s *ResultSet) CreateExecString(args []Value) (string, error) {
 	b.WriteString(")")
 	return b.String(), nil
 }
+
+func (s *ResultSet) CreateNamedString(query string, names []string, args []Value) (string, error) {
+var b bytes.Buffer
+	b.WriteString(fmt.Sprintf("%s ( ", query))
+
+	for i, v := range args {
+		str, err := ConvertToMonet(v)
+		if err != nil {
+			return "", nil
+		}
+		if i > 0 {
+			b.WriteString(", ")
+		}
+		b.WriteString(fmt.Sprintf(" %s ", names[i]))
+		b.WriteString(str)
+	}
+
+	b.WriteString(")")
+	return b.String(), nil
+}

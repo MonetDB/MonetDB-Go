@@ -17,7 +17,8 @@ import (
 )
 
 type Rows struct {
-	stmt        *Stmt
+	conn        *mapi.MapiConn
+	resultset   *mapi.ResultSet
 	active      bool
 	queryId     int
 	err         error
@@ -31,14 +32,15 @@ type Rows struct {
 	columns     []string
 }
 
-func newRows(s *Stmt) *Rows {
+func newRows(c *mapi.MapiConn, r *mapi.ResultSet) *Rows {
 	return &Rows{
-		stmt:   s,
-		active: true,
-		err:    nil,
+		conn:      c,
+		resultset: r,
+		active:    true,
+		err:       nil,
 
-		columns: nil,
-		rowNum:  0,
+		columns:   nil,
+		rowNum:    0,
 	}
 }
 
@@ -109,14 +111,14 @@ func (r *Rows) fetchNext() error {
 	end := min(r.rowCount, r.rowNum+c_ARRAY_SIZE)
 	amount := end - r.offset
 
-	res, err := r.stmt.conn.mapi.FetchNext(r.queryId, r.offset, amount)
+	res, err := r.conn.FetchNext(r.queryId, r.offset, amount)
 	if err != nil {
 		return err
 	}
 
-	r.stmt.resultset.StoreResult(res)
-	r.rows = r.stmt.copyRows(r.stmt.resultset.Rows)
-	r.schema = r.stmt.resultset.Schema
+	r.resultset.StoreResult(res)
+	r.rows = copyRows(r.resultset.Rows, r.resultset.Metadata.RowCount, r.resultset.Metadata.ColumnCount)
+	r.schema = r.resultset.Schema
 
 	return nil
 }

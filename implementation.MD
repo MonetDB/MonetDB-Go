@@ -43,6 +43,8 @@ We need to add context everywhere. We need to implement the RowsColumnType inter
 
 The [go context library](https://pkg.go.dev/context)
 
+In version 1, every statement was a prepared statement. This is not needed in many cases. In version 2 this is changed. The Stmt struct has a "isPreparedStatement" field. This is only set to true when a statement is generated with a "Prepare" function. There is an executeStmt function now, that can be used to execute a single query against the database. This is used for example for the commit and rollbacks of transactions.
+
 ### New interfaces
 
 ### Testing

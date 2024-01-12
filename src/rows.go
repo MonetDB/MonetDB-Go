@@ -12,6 +12,7 @@ import (
 	"strings"
 	"reflect"
 	"time"
+	"context"
 
 	"github.com/MonetDB/MonetDB-Go/src/mapi"
 )
@@ -102,6 +103,30 @@ const (
 	c_ARRAY_SIZE = 100
 )
 
+// This function call to FetchNext connects to the database and can potentially take a long time. Therefore
+// we want to be able to cancel it, so we run it inside a coroutine.
+func (s *Rows) mapiDo(ctx context.Context, amount int) (string, error) {
+	type res struct {
+		resultstring string;
+		err error
+	}
+	c := make(chan res, 1)
+
+    go func() {
+		r, err := s.conn.FetchNext(s.queryId, s.offset, amount)
+		result := res{r, err}
+		c <- result
+		}()
+
+    select {
+    case <-ctx.Done():
+        <-c // Wait for the coroutine to return. Later we need to cancel the query on the database
+        return "", ctx.Err()
+    case result := <-c:
+        return result.resultstring, result.err
+    }
+}
+
 func (r *Rows) fetchNext() error {
 	if r.rowNum >= r.rowCount {
 		return io.EOF
@@ -111,13 +136,14 @@ func (r *Rows) fetchNext() error {
 	end := min(r.rowCount, r.rowNum+c_ARRAY_SIZE)
 	amount := end - r.offset
 
-	res, err := r.conn.FetchNext(r.queryId, r.offset, amount)
+	//res, err := r.conn.FetchNext(r.queryId, r.offset, amount)
+	res, err := r.mapiDo(context.Background(), amount)
 	if err != nil {
 		return err
 	}
 
 	r.resultset.StoreResult(res)
-	r.rows = copyRows(r.resultset.Rows, r.resultset.Metadata.RowCount, r.resultset.Metadata.ColumnCount)
+	r.rows = convertRows(r.resultset.Rows, r.resultset.Metadata.RowCount, r.resultset.Metadata.ColumnCount)
 	r.schema = r.resultset.Schema
 
 	return nil

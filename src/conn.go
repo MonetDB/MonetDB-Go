@@ -6,7 +6,9 @@ package monetdb
 
 import (
 	"context"
+	"database/sql"
 	"database/sql/driver"
+	"fmt"
 
 	"github.com/MonetDB/MonetDB-Go/src/mapi"
 )
@@ -46,9 +48,31 @@ func (c *Conn) Close() error {
 	return nil
 }
 
-func (c *Conn) Begin() (driver.Tx, error) {
+func (c *Conn) begin(readonly bool, isolation driver.IsolationLevel) (driver.Tx, error) {
 	t := newTx(c)
-	err := executeStmt(c, "START TRANSACTION")
+	var query string
+	if readonly {
+		query = "START TRANSACTION READ ONLY"
+	} else {
+		switch isolation {
+		case driver.IsolationLevel(sql.LevelDefault):
+			query = "START TRANSACTION"
+		case driver.IsolationLevel(sql.LevelReadUncommitted):
+			query = "START TRANSACTION READ UNCOMMITTED"
+		case driver.IsolationLevel(sql.LevelReadCommitted):
+			query = "START TRANSACTION READ COMMITTED"
+		case driver.IsolationLevel(sql.LevelRepeatableRead):
+			query = "START TRANSACTION REPEATABLE READ"
+		case driver.IsolationLevel(sql.LevelSerializable):
+			query = "START TRANSACTION SERIALIZABLE"
+		default:
+			err := fmt.Errorf("monetdb: unsupported transaction level")
+			t.err = err
+			return t, t.err
+		}
+	}
+
+	err := executeStmt(c, query)
 
 	if err != nil {
 		t.err = err
@@ -57,8 +81,13 @@ func (c *Conn) Begin() (driver.Tx, error) {
 	return t, t.err
 }
 
+// Deprecated: Use BeginTx instead
+func (c *Conn) Begin() (driver.Tx, error) {
+	return c.begin(false, driver.IsolationLevel(sql.LevelDefault))
+}
+
 func (c *Conn) BeginTx(ctx context.Context, opts driver.TxOptions) (driver.Tx, error) {
-	tx, err := c.Begin()
+	tx, err := c.begin(opts.ReadOnly, opts.Isolation)
 	return tx, err
 }
 

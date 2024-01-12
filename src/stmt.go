@@ -47,15 +47,41 @@ func (s *Stmt) NumInput() int {
 }
 
 // Deprecated: Use ExecContext instead
+// Run the command on the database with a new context, without a timeout
 func (s *Stmt) Exec(args []driver.Value) (driver.Result, error) {
-	arglist := ValueArgs(args)
-	return s.execResult(arglist)
+	queryParams := paramFromValuesList(args)
+	return s.execResult(context.Background(), queryParams)
 }
 
-func (s *Stmt) execResult(args []driver.NamedValue) (driver.Result, error) {
-	res := newResult()
+// This function executes a mapi command inside a coroutine. This makes it possible to cancel
+// the command when the context is cancelled. At this point in time MonetDB does not support cancelling
+// a running query. This feature is planned for the next release. When that comes available, we will add
+// a function call that cancels the query when a timeout occurs before it is finished.
+func (s *Stmt) mapiDo(ctx context.Context, args []driver.NamedValue) (string, error) {
+	type res struct {
+		resultstring string;
+		err error
+	}
+	c := make(chan res, 1)
 
-	r, err := s.exec(args)
+    go func() {
+		r, err := s.exec(args)
+		result := res{r, err}
+		c <- result
+		}()
+
+    select {
+    case <-ctx.Done():
+        <-c // Wait for the coroutine to return. Later we need to cancel the query on the database
+        return "", ctx.Err()
+    case result := <-c:
+        return result.resultstring, result.err
+    }
+}
+
+func (s *Stmt) execResult(ctx context.Context, args []driver.NamedValue) (driver.Result, error) {
+	res := newResult()
+	r, err := s.mapiDo(ctx, args)
 	if err != nil {
 		res.err = err
 		return res, res.err
@@ -69,9 +95,9 @@ func (s *Stmt) execResult(args []driver.NamedValue) (driver.Result, error) {
 	return res, res.err
 }
 
-func copyRows(rowlist [][]mapi.Value, rowcount int, columncount int)([][]driver.Value) {
+func convertRows(rows [][]mapi.Value, rowcount int, columncount int)([][]driver.Value) {
 	res := make([][]driver.Value, rowcount)
-	for i, row := range rowlist {
+	for i, row := range rows {
 		res[i] = make([]driver.Value, columncount)
 		for j, col := range row {
 			res[i][j] = col
@@ -80,25 +106,25 @@ func copyRows(rowlist [][]mapi.Value, rowcount int, columncount int)([][]driver.
 	return res
 }
 
-func copyArgs(arglist []driver.Value)([]mapi.Value) {
-	res := make([]mapi.Value, len(arglist))
-	for i, arg := range arglist {
+func convertParamValues(args []driver.Value)([]mapi.Value) {
+	res := make([]mapi.Value, len(args))
+	for i, arg := range args {
 		res[i] = arg
 	}
 	return res
 }
 
-func ArgNames(arglist []driver.NamedValue)([]string) {
-	res := make([]string, len(arglist))
-	for i, arg := range arglist {
+func paramNamesList(args []driver.NamedValue)([]string) {
+	res := make([]string, len(args))
+	for i, arg := range args {
 		res[i] = arg.Name
 	}
 	return res
 }
 
-func ArgValues(arglist []driver.NamedValue)([]driver.Value) {
-	res := make([]driver.Value, len(arglist))
-	for i, arg := range arglist {
+func paramValuesList(args []driver.NamedValue)([]driver.Value) {
+	res := make([]driver.Value, len(args))
+	for i, arg := range args {
 			res[i] = arg.Value
 	}
 	return res
@@ -112,9 +138,9 @@ func ArgValues(arglist []driver.NamedValue)([]driver.Value) {
 // array of NamedValues. This function creates the new array by copying the
 // Value field and setting the Ordinal field. Now all the functions that
 // are not deprecated can use the new argument list type.
-func ValueArgs(arglist []driver.Value)([]driver.NamedValue) {
-	res := make([]driver.NamedValue, len(arglist))
-	for i, arg := range arglist {
+func paramFromValuesList(args []driver.Value)([]driver.NamedValue) {
+	res := make([]driver.NamedValue, len(args))
+	for i, arg := range args {
 		res[i].Ordinal = i - 1
 		res[i].Value = arg
 	}
@@ -123,13 +149,13 @@ func ValueArgs(arglist []driver.Value)([]driver.NamedValue) {
 
 // Deprecated: Use QueryContext instead
 func (s *Stmt) Query(args []driver.Value) (driver.Rows, error) {
-	arglist := ValueArgs(args)
-	return s.queryResult(arglist)
+	queryParams := paramFromValuesList(args)
+	return s.queryResult(context.Background(), queryParams)
 }
 
-func (s *Stmt) queryResult(args []driver.NamedValue) (driver.Rows, error) {
+func (s *Stmt) queryResult(ctx context.Context, args []driver.NamedValue) (driver.Rows, error) {
 	rows := newRows(s.conn.mapi, &s.resultset)
-	r, err := s.exec(args)
+	r, err := s.mapiDo(ctx, args)
 	if err != nil {
 		rows.err = err
 		return rows, rows.err
@@ -144,7 +170,7 @@ func (s *Stmt) queryResult(args []driver.NamedValue) (driver.Rows, error) {
 	rows.lastRowId = s.resultset.Metadata.LastRowId
 	rows.rowCount = s.resultset.Metadata.RowCount
 	rows.offset = s.resultset.Metadata.Offset
-	rows.rows = copyRows(s.resultset.Rows, s.resultset.Metadata.RowCount, s.resultset.Metadata.ColumnCount)
+	rows.rows = convertRows(s.resultset.Rows, s.resultset.Metadata.RowCount, s.resultset.Metadata.ColumnCount)
 	rows.schema = s.resultset.Schema
 
 	return rows, rows.err
@@ -161,12 +187,12 @@ func (s *Stmt) exec(args []driver.NamedValue) (string, error) {
 
 	if len(args) != 0 {
 		if s.isPreparedStatement {
-			arglist := copyArgs(ArgValues(args))
-			return s.query.ExecutePreparedQuery(&s.resultset, arglist)
+			queryParams := convertParamValues(paramValuesList(args))
+			return s.query.ExecutePreparedQuery(&s.resultset, queryParams)
 		} else {
-			argnames := ArgNames(args)
-			arglist := copyArgs(ArgValues(args))
-			return s.query.ExecuteNamedQuery(&s.resultset, argnames, arglist)
+			queryParamsNames := paramNamesList(args)
+			queryParams := convertParamValues(paramValuesList(args))
+			return s.query.ExecuteNamedQuery(&s.resultset, queryParamsNames, queryParams)
 		}
 	} else {
 		return s.query.ExecuteQuery(&s.resultset)
@@ -174,12 +200,12 @@ func (s *Stmt) exec(args []driver.NamedValue) (string, error) {
 }
 
 func (s *Stmt) ExecContext(ctx context.Context, args []driver.NamedValue) (driver.Result, error) {
-	res, err := s.execResult(args)
+	res, err := s.execResult(ctx, args)
 	return res, err
 }
 
 func (s *Stmt) QueryContext(ctx context.Context, args []driver.NamedValue) (driver.Rows, error) {
-	res, err := s.queryResult(args)
+	res, err := s.queryResult(ctx, args)
 	return res, err
 }
 

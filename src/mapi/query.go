@@ -31,16 +31,16 @@ func (q *Query) PrepareQuery(r *ResultSet) error {
 	return r.StoreResult(resultstring)
 }
 
-func (q *Query) ExecutePreparedQuery(r *ResultSet, arglist []Value) (string, error) {
-	execStr, err := r.CreateExecString(arglist)
+func (q *Query) ExecutePreparedQuery(r *ResultSet, args []Value) (string, error) {
+	execStr, err := r.CreateExecString(args)
 	if err != nil {
 		return "", err
 	} 
 	return q.execute(execStr)
 }
 
-func (q *Query) ExecuteNamedQuery(r *ResultSet, names []string, arglist []Value) (string, error) {
-	execStr, err := r.CreateNamedString(q.SqlQuery, names, arglist)
+func (q *Query) ExecuteNamedQuery(r *ResultSet, names []string, args []Value) (string, error) {
+	execStr, err := r.CreateNamedString(q.SqlQuery, names, args)
 	if err != nil {
 		return "", err
 	}

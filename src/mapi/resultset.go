@@ -223,7 +223,8 @@ func (s *ResultSet) CreateExecString(args []Value) (string, error) {
 
 func (s *ResultSet) CreateNamedString(query string, names []string, args []Value) (string, error) {
 var b bytes.Buffer
-	b.WriteString(fmt.Sprintf("%s ( ", query))
+	// A query with named placeholders ends with a colon, before the named arguments list
+	b.WriteString(fmt.Sprintf("%s : ( ", query))
 
 	for i, v := range args {
 		str, err := ConvertToMonet(v)

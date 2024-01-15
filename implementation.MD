@@ -54,6 +54,7 @@ In version 1, every statement was a prepared statement. This is not needed in ma
 ### Not implemented
 
 - The [Out](https://pkg.go.dev/database/sql#Out) interface is not implemented because MonetDB stored procedures do not support (IN)OUT parameters at the moment.
+- The [documentation](https://www.monetdb.org/documentation-Dec2023/user-guide/sql-manual/transactions/) mentions the TRANSACTION READ ONLY option, but it is not supported in the MonetDB server.
 
 ### Testing
 

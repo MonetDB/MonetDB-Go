@@ -52,19 +52,20 @@ func (c *Conn) begin(readonly bool, isolation driver.IsolationLevel) (driver.Tx,
 	t := newTx(c)
 	var query string
 	if readonly {
+		// The monetdb documentation mentions this options, but it is not supported
 		query = "START TRANSACTION READ ONLY"
 	} else {
 		switch isolation {
 		case driver.IsolationLevel(sql.LevelDefault):
 			query = "START TRANSACTION"
 		case driver.IsolationLevel(sql.LevelReadUncommitted):
-			query = "START TRANSACTION READ UNCOMMITTED"
+			query = "START TRANSACTION ISOLATION LEVEL READ UNCOMMITTED"
 		case driver.IsolationLevel(sql.LevelReadCommitted):
-			query = "START TRANSACTION READ COMMITTED"
+			query = "START TRANSACTION ISOLATION LEVEL READ COMMITTED"
 		case driver.IsolationLevel(sql.LevelRepeatableRead):
-			query = "START TRANSACTION REPEATABLE READ"
+			query = "START TRANSACTION ISOLATION LEVEL REPEATABLE READ"
 		case driver.IsolationLevel(sql.LevelSerializable):
-			query = "START TRANSACTION SERIALIZABLE"
+			query = "START TRANSACTION ISOLATION LEVEL SERIALIZABLE"
 		default:
 			err := fmt.Errorf("monetdb: unsupported transaction level")
 			t.err = err

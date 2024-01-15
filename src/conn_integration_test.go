@@ -81,3 +81,78 @@ func TestConnIntegration(t *testing.T) {
 		}
 	})
 }
+
+func TestConnSerialIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
+	db, err := sql.Open("monetdb", "monetdb:monetdb@localhost:50000/monetdb")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if pingErr := db.Ping(); pingErr != nil {
+		t.Fatal(pingErr)
+	}
+
+	t.Run("Exec create table", func(t *testing.T) {
+		_, err := db.Exec("create table test3 ( id int AUTO_INCREMENT, name varchar(16))")
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	t.Run("insert statement", func(t *testing.T) {
+		result, err := db.Exec("insert into test3 ( name ) values ( 'name' )" )
+		if err != nil {
+			t.Fatal(err)
+		}
+		if result == nil {
+			t.Fatal("query did not return a result object")
+		}
+		rId, err := result.LastInsertId()
+		if err != nil {
+			t.Error("Could not get id from result")
+		}
+		if rId != 1 {
+			t.Errorf("Unexpected id %d", rId)
+		}
+		nRows, err := result.RowsAffected()
+		if err != nil {
+			t.Error("Could not get number of rows from result")
+		}
+		if nRows != 1 {
+			t.Errorf("Unexpected number of rows %d", nRows)
+		}
+	})
+
+	t.Run("Run simple query", func(t *testing.T) {
+		rows, err := db.Query("select * from test3 where id = 1")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if rows == nil {
+			t.Fatal("query returned no rows")
+		}
+		for rows.Next() {
+			var id int
+			var name string
+			if err := rows.Scan(&id, &name); err != nil {
+			 t.Error(err)
+			}
+		}
+		if err := rows.Err(); err != nil {
+			t.Error(err)
+		}
+		defer rows.Close()
+	})
+
+	t.Run("Exec drop table", func(t *testing.T) {
+		_, err := db.Exec("drop table test3")
+		if err != nil {
+			t.Error(err)
+		}
+	})
+
+	defer db.Close()
+}

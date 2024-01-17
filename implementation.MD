@@ -59,3 +59,7 @@ In version 1, every statement was a prepared statement. This is not needed in ma
 ### Testing
 
 The [go testing library](https://pkg.go.dev/testing)
+
+### Examples
+
+The examples directory contains several scripts that demonstrate how the monetdb driver for the sql library should be used. They contain the same functionality as the integration tests, but in form that show howto implement certain patterns, instead of verifying the correct results.

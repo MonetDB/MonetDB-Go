@@ -42,7 +42,6 @@ func (c *Conn) Prepare(query string) (driver.Stmt, error) {
 
 func (c *Conn) Close() error {
 	// TODO: close prepared statements
-	// TODO: close contexts
 	c.mapi.Disconnect()
 	c.mapi = nil
 	return nil

@@ -99,10 +99,6 @@ func min(a, b int) int {
 	return b
 }
 
-const (
-	c_ARRAY_SIZE = 100
-)
-
 // This function call to FetchNext connects to the database and can potentially take a long time. Therefore
 // we want to be able to cancel it, so we run it inside a coroutine.
 func (s *Rows) mapiDo(ctx context.Context, amount int) (string, error) {
@@ -133,17 +129,16 @@ func (r *Rows) fetchNext() error {
 	}
 
 	r.offset += len(r.rows)
-	end := min(r.rowCount, r.rowNum+c_ARRAY_SIZE)
+	end := min(r.rowCount, r.rowNum+mapi.MAPI_ARRAY_SIZE)
 	amount := end - r.offset
 
-	//res, err := r.conn.FetchNext(r.queryId, r.offset, amount)
 	res, err := r.mapiDo(context.Background(), amount)
 	if err != nil {
 		return err
 	}
 
 	r.resultset.StoreResult(res)
-	r.rows = convertRows(r.resultset.Rows, r.resultset.Metadata.RowCount, r.resultset.Metadata.ColumnCount)
+	r.rows = convertRows(r.resultset.Rows, r.resultset.Metadata.ColumnCount)
 	r.schema = r.resultset.Schema
 
 	return nil

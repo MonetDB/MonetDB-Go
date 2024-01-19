@@ -95,8 +95,8 @@ func (s *Stmt) execResult(ctx context.Context, args []driver.NamedValue) (driver
 	return res, res.err
 }
 
-func convertRows(rows [][]mapi.Value, rowcount int, columncount int)([][]driver.Value) {
-	res := make([][]driver.Value, rowcount)
+func convertRows(rows [][]mapi.Value, columncount int)([][]driver.Value) {
+	res := make([][]driver.Value, len(rows))
 	for i, row := range rows {
 		res[i] = make([]driver.Value, columncount)
 		for j, col := range row {
@@ -166,16 +166,17 @@ func (s *Stmt) queryResult(ctx context.Context, args []driver.NamedValue) (drive
 		rows.err = err
 		return rows, rows.err
 	}
+	// We have gotten the first batch of the resultset. The RowCount is the total number of rows in the result.
+	// But we have only at most mapi.MAPI_ARRAY_SIZE rows available.
 	rows.queryId = s.resultset.Metadata.QueryId
 	rows.lastRowId = s.resultset.Metadata.LastRowId
 	rows.rowCount = s.resultset.Metadata.RowCount
 	rows.offset = s.resultset.Metadata.Offset
-	rows.rows = convertRows(s.resultset.Rows, s.resultset.Metadata.RowCount, s.resultset.Metadata.ColumnCount)
+	rows.rows = convertRows(s.resultset.Rows, s.resultset.Metadata.ColumnCount)
 	rows.schema = s.resultset.Schema
 
 	return rows, rows.err
 }
-
 
 func (s *Stmt) exec(args []driver.NamedValue) (string, error) {
 	if s.isPreparedStatement && s.resultset.Metadata.ExecId == -1 {

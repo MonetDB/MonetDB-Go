@@ -44,6 +44,10 @@ const mapi_STATE_READY = 1
 // MAPI connection is NOT established.
 const mapi_STATE_INIT = 0
 
+const (
+	MAPI_ARRAY_SIZE = 100
+)
+
 var (
 	mapi_MSG_MORE = string([]byte{1, 2, 10})
 )

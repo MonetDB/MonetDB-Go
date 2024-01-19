@@ -9,12 +9,14 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
+	"time"
 
 	"github.com/MonetDB/MonetDB-Go/src/mapi"
 )
 
 type Conn struct {
 	mapi *mapi.MapiConn
+	timezone *time.Location
 }
 
 func newConn(name string) (*Conn, error) {
@@ -22,6 +24,7 @@ func newConn(name string) (*Conn, error) {
 		mapi: nil,
 	}
 
+	conn.timezone = time.Local
 	m, err := mapi.NewMapi(name)
 	if err != nil {
 		return conn, err
@@ -33,7 +36,30 @@ func newConn(name string) (*Conn, error) {
 
 	conn.mapi = m
 	m.SetSizeHeader(true)
+	conn.setServerTimezone()
 	return conn, nil
+}
+
+func (c *Conn) setServerTimezone() error {
+	tz, err := time.LoadLocation(c.timezone.String())
+	if err != nil {
+		return err
+	}
+	if tz.String() != c.timezone.String() {
+		return err
+	}
+	_, offset := time.Now().Zone()
+
+	hours := int(offset / 3600)
+	remaining := offset - 3600 * hours
+	minutes := int(remaining / 60)
+	// Go does not have an absolute value function for int
+	if minutes < 0 {
+		minutes = -1 * minutes
+	}
+	query := fmt.Sprintf("SET TIME ZONE INTERVAL '%+03d:%02d' HOUR TO MINUTE;", hours, minutes)
+	err = executeStmt(c, query)
+	return err
 }
 
 func (c *Conn) Prepare(query string) (driver.Stmt, error) {

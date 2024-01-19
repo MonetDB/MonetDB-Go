@@ -7,6 +7,7 @@ package monetdb
 import (
 	"database/sql"
 	"testing"
+	"time"
 )
 
 func TestConnIntegration(t *testing.T) {
@@ -155,4 +156,94 @@ func TestConnSerialIntegration(t *testing.T) {
 	})
 
 	defer db.Close()
+}
+
+func TestConnTimezoneIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
+	db, err := sql.Open("monetdb", "monetdb:monetdb@localhost:50000/monetdb")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if pingErr := db.Ping(); pingErr != nil {
+		t.Fatal(pingErr)
+	}
+	defer db.Close()
+
+	t.Run("Exec create table", func(t *testing.T) {
+		_, err := db.Exec("create table test3 ( sometime timestamptz)")
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	t.Run("insert statement", func(t *testing.T) {
+		result, err := db.Exec("insert into test3 ( sometime ) values ( '2024-01-19 09:54:30.988417434+0000' )" )
+		if err != nil {
+			t.Fatal(err)
+		}
+		if result == nil {
+			t.Fatal("query did not return a result object")
+		}
+		rId, err := result.LastInsertId()
+		if err != nil {
+			t.Error("Could not get id from result")
+		}
+		if rId != -1 {
+			t.Errorf("Unexpected id %d", rId)
+		}
+		nRows, err := result.RowsAffected()
+		if err != nil {
+			t.Error("Could not get number of rows from result")
+		}
+		if nRows != 1 {
+			t.Errorf("Unexpected number of rows %d", nRows)
+		}
+	})
+
+	t.Run("Run simple query", func(t *testing.T) {
+		rows, err := db.Query("select * from test3")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if rows == nil {
+			t.Fatal("query returned no rows")
+		}
+		for rows.Next() {
+			var sometime time.Time
+			if err := rows.Scan(&sometime); err != nil {
+			 t.Error(err)
+			}
+		}
+		if err := rows.Err(); err != nil {
+			t.Error(err)
+		}
+		defer rows.Close()
+	})
+
+	t.Run("Run simple query", func(t *testing.T) {
+		var secondsEastOfUTC int
+		selectErr := db.QueryRow("select \"second\"(local_timezone())").Scan(&secondsEastOfUTC)
+		switch {
+		case selectErr == sql.ErrNoRows:
+			t.Error(selectErr.Error())
+		case selectErr != nil:
+			t.Error(selectErr.Error())
+		default:
+			mytime := time.Now()
+			_, offset := mytime.Local().Zone()
+			if offset != secondsEastOfUTC {
+				t.Error("Offset is not the same as the database timezone")
+			}
+		}
+	})
+
+	t.Run("Exec drop table", func(t *testing.T) {
+		_, err := db.Exec("drop table test3")
+		if err != nil {
+			t.Error(err)
+		}
+	})
 }

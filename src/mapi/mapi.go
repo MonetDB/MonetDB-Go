@@ -71,6 +71,10 @@ type MapiConn struct {
 
 	State int
 
+	sizeHeader bool
+	replySize  int
+	autoCommit bool
+
 	conn *net.TCPConn
 }
 
@@ -93,6 +97,10 @@ func NewMapi(name string) (*MapiConn, error) {
 		Language: language,
 
 		State: mapi_STATE_INIT,
+
+		sizeHeader: true,
+		replySize : MAPI_ARRAY_SIZE,
+		autoCommit: true,
 	}, nil
 }
 
@@ -119,10 +127,23 @@ func (c *MapiConn) SetSizeHeader(enable bool) (string, error) {
 	var sizeheader int
 	if enable {
 		sizeheader = 1
-	} else {
-		sizeheader = 0
 	}
+	// We don't need an else here, the sizehandler is initialized to 0 by default
 	cmd := fmt.Sprintf("Xsizeheader %d", sizeheader)
+	return c.cmd(cmd)
+}
+
+func (c *MapiConn) SetReplySize(size int) (string, error) {
+	cmd := fmt.Sprintf("Xreply_size %d", size)
+	return c.cmd(cmd)
+}
+
+func (c *MapiConn) SetAutoCommit(enable bool) (string, error) {
+	var autoCommit int
+	if enable {
+		autoCommit = 1
+	}
+	cmd := fmt.Sprintf("Xauto_commit %d", autoCommit)
 	return c.cmd(cmd)
 }
 

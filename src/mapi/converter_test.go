@@ -103,8 +103,7 @@ func TestConvertToGo(t *testing.T) {
 func compareByteArray(t *testing.T, val []byte, e Value) bool {
 	switch exp := e.(type) {
 	case []byte:
-		//lint:ignore S1004 prepare to enable staticchecks
-		return bytes.Compare(val, exp) == 0
+		return bytes.Equal(val, exp)
 	default:
 		return false
 	}

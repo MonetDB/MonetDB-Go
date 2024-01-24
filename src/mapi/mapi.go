@@ -394,9 +394,7 @@ func (c *MapiConn) putBlock(b []byte) error {
 			last = 1
 		}
 
-		//lint:ignore S1021 prepare to enable staticchecks
-		var packed uint16
-		packed = uint16((length << 1) + last)
+		packed := uint16((length << 1) + last)
 		flag := new(bytes.Buffer)
 		binary.Write(flag, binary.LittleEndian, packed)
 

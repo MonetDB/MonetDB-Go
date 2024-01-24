@@ -24,7 +24,8 @@ func newConn(name string) (*Conn, error) {
 		mapi: nil,
 	}
 
-	conn.timezone = time.Local
+	// For now we do not change the timezone, because this might certain users.
+	// conn.timezone = time.Local
 	m, err := mapi.NewMapi(name)
 	if err != nil {
 		return conn, err

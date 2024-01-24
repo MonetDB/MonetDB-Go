@@ -53,7 +53,7 @@ func (s *Stmt) Exec(args []driver.Value) (driver.Result, error) {
 	return s.execResult(context.Background(), queryParams)
 }
 
-// This function executes a mapi command inside a coroutine. This makes it possible to cancel
+// This function executes a mapi command inside a goroutine. This makes it possible to cancel
 // the command when the context is cancelled. At this point in time MonetDB does not support cancelling
 // a running query. This feature is planned for the next release. When that comes available, we will add
 // a function call that cancels the query when a timeout occurs before it is finished.
@@ -72,7 +72,7 @@ func (s *Stmt) mapiDo(ctx context.Context, args []driver.NamedValue) (string, er
 
     select {
     case <-ctx.Done():
-        <-c // Wait for the coroutine to return. Later we need to cancel the query on the database
+        <-c // Wait for the goroutine to return. Later we need to cancel the query on the database
         return "", ctx.Err()
     case result := <-c:
         return result.resultstring, result.err

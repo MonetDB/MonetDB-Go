@@ -100,7 +100,7 @@ func min(a, b int) int {
 }
 
 // This function call to FetchNext connects to the database and can potentially take a long time. Therefore
-// we want to be able to cancel it, so we run it inside a coroutine.
+// we want to be able to cancel it, so we run it inside a goroutine.
 func (s *Rows) mapiDo(ctx context.Context, amount int) (string, error) {
 	type res struct {
 		resultstring string;
@@ -116,7 +116,7 @@ func (s *Rows) mapiDo(ctx context.Context, amount int) (string, error) {
 
     select {
     case <-ctx.Done():
-        <-c // Wait for the coroutine to return. Later we need to cancel the query on the database
+        <-c // Wait for the goroutine to return. Later we need to cancel the query on the database
         return "", ctx.Err()
     case result := <-c:
         return result.resultstring, result.err

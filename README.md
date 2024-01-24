@@ -1,4 +1,4 @@
-go-monetdb
+MonetDB-Go
 ==========
 
 MonetDB driver for Go.
@@ -46,7 +46,7 @@ If the `port` is blank, then the default port `50000` will be used.
 
 ## API Documentation
 
-https://pkg.go.dev/github.com/fajran/go-monetdb
+https://pkg.go.dev/github.com/MonetDB/MonetDB-Go
 
 ## Testing
 

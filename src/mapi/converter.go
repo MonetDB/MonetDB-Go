@@ -272,8 +272,7 @@ func toDateTimeString(v Value) (string, error) {
 	case Date:
 		return toQuotedString(fmt.Sprintf("%04d-%02d-%02d", val.Year, val.Month, val.Day))
 	default:
-		//lint:ignore ST1005 prepare to enable staticchecks
-		return "", fmt.Errorf("Unsupported type")
+		return "", fmt.Errorf("mapi: unsupported type")
 	}
 }
 
@@ -305,8 +304,7 @@ func convertToGo(value, dataType string) (Value, error) {
 		value := strings.TrimSpace(value)
 		return mapper(value)
 	}
-	//lint:ignore ST1005 prepare to enable staticchecks
-	return nil, fmt.Errorf("Type not supported: %s", dataType)
+	return nil, fmt.Errorf("mapi: type not supported: %s", dataType)
 }
 
 func ConvertToMonet(value Value) (string, error) {
@@ -319,6 +317,5 @@ func ConvertToMonet(value Value) (string, error) {
 	if mapper, ok := toMonetMappers[n]; ok {
 		return mapper(value)
 	}
-	//lint:ignore ST1005 prepare to enable staticchecks
-	return "", fmt.Errorf("Type not supported: %v", t)
+	return "", fmt.Errorf("mapi: type not supported: %v", t)
 }

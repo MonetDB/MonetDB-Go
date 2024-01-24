@@ -23,12 +23,8 @@ func parseDSN(name string) (config, error) {
 	ipv6_re := regexp.MustCompile(`^((?P<username>[^:]+?)(:(?P<password>[^@]+?))?@)?\[(?P<hostname>(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))+?)\](:(?P<port>\d+?))?\/(?P<database>.+?)$`)
 
 	if ipv6_re.MatchString(name) {
-		//lint:ignore SA4006 prepare to enable staticchecks
-		m := make([]string, 0)
-		//lint:ignore SA4006 prepare to enable staticchecks
-		n := make([]string, 0)
-		m = ipv6_re.FindAllStringSubmatch(name, -1)[0]
-		n = ipv6_re.SubexpNames()
+		m := ipv6_re.FindAllStringSubmatch(name, -1)[0]
+		n := ipv6_re.SubexpNames()
 		return getConfig(m, n, true), nil
 	}
 
@@ -44,15 +40,13 @@ func parseDSN(name string) (config, error) {
 	configWithHost, err := parseHost(reverse(host), c)
 
 	if err != nil {
-		//lint:ignore ST1005 prepare to enable staticchecks
-		return config{}, fmt.Errorf("Invalid DSN")
+		return config{}, fmt.Errorf("mapi: invalid DSN")
 	}
 
 	newConfig, err := parseCreds(reverse(creds), configWithHost)
 
 	if err != nil {
-		//lint:ignore ST1005 prepare to enable staticchecks
-		return config{}, fmt.Errorf("Invalid DSN")
+		return config{}, fmt.Errorf("mapi: invalid DSN")
 	}
 
 	return newConfig, nil
@@ -66,8 +60,7 @@ func parseCreds(creds string, c config) (config, error) {
 
 	if found {
 		if username == "" {
-			//lint:ignore ST1005 prepare to enable staticchecks
-			return c, fmt.Errorf("Invalid DSN")
+			return c, fmt.Errorf("mapi: invalid DSN")
 		}
 
 		c.Password = password
@@ -80,13 +73,11 @@ func parseHost(host string, c config) (config, error) {
 	host, dbName, found := Cut(host, "/")
 
 	if !found {
-		//lint:ignore ST1005 prepare to enable staticchecks
-		return c, fmt.Errorf("Invalid DSN")
+		return c, fmt.Errorf("mapi: invalid DSN")
 	}
 
 	if host == "" {
-		//lint:ignore ST1005 prepare to enable staticchecks
-		return c, fmt.Errorf("Invalid DSN")
+		return c, fmt.Errorf("mapi: invalid DSN")
 	}
 
 	c.Database = dbName
@@ -102,8 +93,7 @@ func parseHost(host string, c config) (config, error) {
 	port_num, err := strconv.Atoi(port)
 
 	if err != nil {
-		//lint:ignore ST1005 prepare to enable staticchecks
-		return c, fmt.Errorf("Invalid DSN")
+		return c, fmt.Errorf("mapi: invalid DSN")
 	}
 
 	c.Port = port_num

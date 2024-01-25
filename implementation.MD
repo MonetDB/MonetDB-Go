@@ -8,6 +8,10 @@ The [go sql library](https://pkg.go.dev/database/sql) and the [go sql driver lib
 
 The previous version, v1.1.0, implemented the Go v1.7 library interfaces. The latest version, v2.0.0, implements the latest database interfaces (go 1.21.5). This provides more functionality, specifically the column types and supporting the context interface.
 
+### Go module major version
+
+It turns out that the go module system has a specific way of implementing a new major version of a module. This is explained in [this](https://go.dev/blog/v2-go-modules#TOC_4.) blog post. This means the the published version v2.0.0 is completely unusable. Unfortunately, when you fix the repository as suggested, the old version of the module becomes completely unusable. There is no obvious fix for this, so for now we accept this. This means that the code in this repository only works for major version v2. We also needed to upgrade the required go version to 1.18, because we needed the go workspace functionality in order to be able to run tests for the v2 version
+
 ### Mapi
 
 [Mapi](https://www.monetdb.org/documentation-Jun2023/user-guide/client-interfaces/libraries-drivers/mapi-library/) is the API that provides the communication protocol with the MonetDB database. To understand the details of the mapi protocol implementation in this library, check the documentation in the [PHP](https://github.com/MonetDB/MonetDB-PHP/tree/master/protocol_doc) driver.

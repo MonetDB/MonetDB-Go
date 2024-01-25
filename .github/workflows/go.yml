@@ -28,7 +28,7 @@ jobs:
         version: "2023.1.6"
 
     - name: Build
-      run: go build -v ./...
+      run: go build -v ./v2
 
     - name: Test
-      run: go test -v -test.short ./...
+      run: go test -v -short ./v2

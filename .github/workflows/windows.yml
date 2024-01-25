@@ -18,10 +18,9 @@ jobs:
         run: choco install golang
 
       - name: Build
-        run: go build -v ./...
+        run: go build -v ./v2
 
       - name: Test
-        # For some reason, the command is different than on linux/macos
-        run: go test -short -v ./...
+        run: go test -short -v ./v2
 
         

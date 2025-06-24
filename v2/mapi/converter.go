@@ -181,7 +181,7 @@ func parseTime(v string) (t time.Time, err error) {
 }
 
 func toNil(v string) (Value, error) {
-	return "NULL", nil
+	return nil, nil
 }
 
 func toBool(v string) (Value, error) {
@@ -297,8 +297,8 @@ var toMonetMappers = map[string]toMonetConverter{
 }
 
 func convertToGo(value, dataType string) (Value, error) {
-	if strings.TrimSpace(value) == "NULL" {
-		dataType = "NULL"
+	if strings.TrimSpace(value) == MDB_NULL {
+		dataType = MDB_NULL
 	}
 
 	if mapper, ok := toGoMappers[dataType]; ok {

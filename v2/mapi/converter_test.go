@@ -79,6 +79,7 @@ func TestConvertToGo(t *testing.T) {
 		{"'quoted \\\\\\'string\\\\\\''", "char", "quoted \\'string\\'"},
 		{"'back\\\\slashed'", "char", "back\\slashed"},
 		{"'ABC'", "blob", []uint8{0x41, 0x42, 0x43}},
+		{"NULL", "varchar", nil},
 	}
 
 	for _, c := range tcs {

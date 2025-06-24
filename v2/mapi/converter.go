@@ -47,17 +47,17 @@ const (
 
 	// full names and aliases, spaces are replaced with underscores
 	//lint:ignore U1000 prepare to enable staticchecks
-	mdb_CHARACTER               = MDB_CHAR
+	mdb_CHARACTER = MDB_CHAR
 	//lint:ignore U1000 prepare to enable staticchecks
-	mdb_CHARACTER_VARYING       = MDB_VARCHAR
+	mdb_CHARACTER_VARYING = MDB_VARCHAR
 	//lint:ignore U1000 prepare to enable staticchecks
 	mdb_CHARACHTER_LARGE_OBJECT = MDB_CLOB
 	//lint:ignore U1000 prepare to enable staticchecks
-	mdb_BINARY_LARGE_OBJECT     = MDB_BLOB
+	mdb_BINARY_LARGE_OBJECT = MDB_BLOB
 	//lint:ignore U1000 prepare to enable staticchecks
-	mdb_NUMERIC                 = MDB_DECIMAL
+	mdb_NUMERIC = MDB_DECIMAL
 	//lint:ignore U1000 prepare to enable staticchecks
-	mdb_DOUBLE_PRECISION        = MDB_DOUBLE
+	mdb_DOUBLE_PRECISION = MDB_DOUBLE
 )
 
 var timeFormats = []string{
@@ -67,6 +67,7 @@ var timeFormats = []string{
 	"2006-01-02 15:04:05 -0700 MST",
 	"Mon Jan 2 15:04:05 -0700 MST 2006",
 	"2006-01-02 15:04:05.999999+00:00",
+	"2006-01-02 15:04:05.999999-07:00",
 	"15:04:05",
 }
 
@@ -277,20 +278,20 @@ func toDateTimeString(v Value) (string, error) {
 }
 
 var toMonetMappers = map[string]toMonetConverter{
-	"int":          toString,
-	"int8":         toString,
-	"int16":        toString,
-	"int32":        toString,
-	"int64":        toString,
-	"float":        toString,
-	"float32":      toString,
-	"float64":      toString,
-	"bool":         toString,
-	"string":       toQuotedString,
-	"nil":          toNull,
-	"null":         toNull,
-	"[]uint8":      toByteString,
-	"time.Time":    toQuotedString,
+	"int":       toString,
+	"int8":      toString,
+	"int16":     toString,
+	"int32":     toString,
+	"int64":     toString,
+	"float":     toString,
+	"float32":   toString,
+	"float64":   toString,
+	"bool":      toString,
+	"string":    toQuotedString,
+	"nil":       toNull,
+	"null":      toNull,
+	"[]uint8":   toByteString,
+	"time.Time": toQuotedString,
 	"mapi.Time": toDateTimeString,
 	"mapi.Date": toDateTimeString,
 }

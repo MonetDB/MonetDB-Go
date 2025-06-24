@@ -5,6 +5,7 @@
 package mapi
 
 import (
+	"database/sql"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -170,6 +171,49 @@ func toInt64(v string) (Value, error) {
 	return r, err
 }
 
+func toNullableFloat64(v string) (Value, error) {
+	if v == "NULL" {
+		return sql.NullFloat64{Valid: false}, nil
+	}
+	res, err := toDouble(v)
+	if err != nil {
+		return nil, err
+	}
+	return sql.NullFloat64{Float64: res.(float64), Valid: true}, nil
+}
+
+func toNullableInt64(v string) (Value, error) {
+	if v == "NULL" {
+		return sql.NullInt64{Valid: false}, nil
+	}
+	res, err := toInt64(v)
+	if err != nil {
+		return nil, err
+	}
+	return sql.NullInt64{Int64: res.(int64), Valid: true}, nil
+}
+
+func toNullableBool(v string) (Value, error) {
+	if v == "NULL" {
+		return sql.NullBool{Valid: false}, nil
+	}
+	res, err := toBool(v)
+	if err != nil {
+		return nil, err
+	}
+	return sql.NullBool{Bool: res.(bool), Valid: true}, nil
+}
+
+func toNullableString(v string) (Value, error) {
+	if v == "NULL" {
+		return sql.NullString{Valid: false}, nil
+	}
+	res, err := strip(v)
+	if err != nil {
+		return nil, err
+	}
+	return sql.NullString{String: res.(string), Valid: true}, nil
+}
 func parseTime(v string) (t time.Time, err error) {
 	for _, f := range timeFormats {
 		t, err = time.Parse(f, v)
@@ -212,6 +256,10 @@ func toTimestampTz(v string) (Value, error) {
 	return parseTime(v)
 }
 
+// TODO: should all types be nullable?
+// since the mapi protocol does not expose this information, assuming nullable is necessary
+// this requires handling the null case for all results, and also
+// does not allow types other than int64 and float64
 var toGoMappers = map[string]toGoConverter{
 	MDB_CHAR:           strip,
 	MDB_VARCHAR:        strip,
@@ -225,7 +273,7 @@ var toGoMappers = map[string]toGoConverter{
 	MDB_BIGINT:         toInt64,
 	MDB_HUGEINT:        toInt64,
 	MDB_SERIAL:         toInt64,
-	MDB_REAL:           toFloat,
+	MDB_REAL:           toNullableFloat64,
 	MDB_DOUBLE:         toDouble,
 	MDB_BOOLEAN:        toBool,
 	MDB_DATE:           toDate,
@@ -239,7 +287,7 @@ var toGoMappers = map[string]toGoConverter{
 	MDB_SHORTINT:       toInt16,
 	MDB_MEDIUMINT:      toInt32,
 	MDB_LONGINT:        toInt64,
-	MDB_FLOAT:          toFloat,
+	MDB_FLOAT:          toNullableFloat64,
 }
 
 func toString(v Value) (string, error) {

@@ -6,7 +6,6 @@ package mapi
 
 import (
 	"bytes"
-	"database/sql"
 	"testing"
 	"time"
 )
@@ -65,8 +64,8 @@ func TestConvertToGo(t *testing.T) {
 		{"64", "longint", int64(64)},
 		{"64", "hugeint", int64(64)},
 		{"64", "serial", int64(64)},
-		{"3.2", "float", sql.NullFloat64{Float64: 3.2, Valid: true}}, // float and real are nullable
-		{"3.2", "real", sql.NullFloat64{Float64: 3.2, Valid: true}},
+		{"3.2", "float", float64(3.2)},
+		{"3.2", "real", float64(3.2)}, // REAL is mapped to float64
 		{"6.4", "double", float64(6.4)},
 		{"6.4", "decimal", float64(6.4)},
 		{"true", "boolean", true},

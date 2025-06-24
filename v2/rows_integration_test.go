@@ -10,7 +10,7 @@ import (
 	"math"
 	"testing"
 )
- 
+
 func TestRowsIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test")
@@ -100,7 +100,7 @@ func TestRowsIntegration(t *testing.T) {
 		if rows == nil {
 			t.Fatal("empty result")
 		}
-		columnlist, err  := rows.Columns()
+		columnlist, err := rows.Columns()
 		if err != nil {
 			t.Error(err)
 		}
@@ -112,7 +112,7 @@ func TestRowsIntegration(t *testing.T) {
 		for rows.Next() {
 			var name string
 			if err := rows.Scan(&name); err != nil {
-			 t.Error(err)
+				t.Error(err)
 			}
 		}
 		if err := rows.Err(); err != nil {
@@ -148,7 +148,6 @@ func TestRowsIntegration(t *testing.T) {
 	defer db.Close()
 }
 
-
 func TestColumnTypesIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test")
@@ -163,9 +162,9 @@ func TestColumnTypesIntegration(t *testing.T) {
 	}
 
 	type coltypetest struct {
-		ct    string // create table query
-		it    string // insert into query
-		cs    string // select star query
+		ct  string   // create table query
+		it  string   // insert into query
+		cs  string   // select star query
 		cn  []string // column names
 		lok []bool   // length value available
 		cl  []int64  // column lengths
@@ -175,7 +174,7 @@ func TestColumnTypesIntegration(t *testing.T) {
 		ds  []bool   // decimal size available
 		dsp []int64  // decimal precision
 		dss []int64  // decimal scale
-		dt   string  // drop table query
+		dt  string   // drop table query
 	}
 
 	var ctl = []coltypetest{
@@ -263,7 +262,7 @@ func TestColumnTypesIntegration(t *testing.T) {
 			[]int64{0, 0},
 			[]bool{false, false},
 			[]string{"REAL", "BOOLEAN"},
-			[]string{"float32", "bool"},
+			[]string{"float64", "bool"},
 			[]bool{false, false},
 			[]int64{0, 0},
 			[]int64{0, 0},
@@ -339,16 +338,16 @@ func TestColumnTypesIntegration(t *testing.T) {
 			if rows == nil {
 				t.Fatal("empty result")
 			}
-			columnlist, err  := rows.Columns()
+			columnlist, err := rows.Columns()
 			if err != nil {
 				t.Error(err)
 			}
 			for j, column := range columnlist {
-				if column !=  ctl[i].cn[j]{
+				if column != ctl[i].cn[j] {
 					t.Errorf("unexpected column name in Columns: %s", column)
 				}
 			}
-			columntypes, err  := rows.ColumnTypes()
+			columntypes, err := rows.ColumnTypes()
 			if err != nil {
 				t.Error(err)
 			}
@@ -367,7 +366,7 @@ func TestColumnTypesIntegration(t *testing.T) {
 					}
 				}
 				_, nullable_ok := column.Nullable()
-				if nullable_ok != ctl[i].nok[j]{
+				if nullable_ok != ctl[i].nok[j] {
 					t.Errorf("not expected that nullable was provided")
 				}
 				coltype := column.DatabaseTypeName()
@@ -386,7 +385,7 @@ func TestColumnTypesIntegration(t *testing.T) {
 					}
 				}
 				precision, scale, ok := column.DecimalSize()
-				if ok != ctl[i].ds[j]{
+				if ok != ctl[i].ds[j] {
 					t.Errorf("not expected that decimal size was provided")
 				} else {
 					if ok {
@@ -400,15 +399,15 @@ func TestColumnTypesIntegration(t *testing.T) {
 				}
 			}
 			/*
-			for rows.Next() {
-				name := make([]driver.Value, colcount)
-				if err := rows.Scan(&name); err != nil {
-				t.Error(err)
+				for rows.Next() {
+					name := make([]driver.Value, colcount)
+					if err := rows.Scan(&name); err != nil {
+					t.Error(err)
+					}
 				}
-			}
-			if err := rows.Err(); err != nil {
-				t.Error(err)
-			}
+				if err := rows.Err(); err != nil {
+					t.Error(err)
+				}
 			*/
 			defer rows.Close()
 		})

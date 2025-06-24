@@ -5,32 +5,32 @@
 package monetdb
 
 import (
+	"context"
 	"database/sql/driver"
 	"fmt"
 	"io"
 	"math"
-	"strings"
 	"reflect"
+	"strings"
 	"time"
-	"context"
 
 	"github.com/MonetDB/MonetDB-Go/v2/mapi"
 )
 
 type Rows struct {
-	conn        *mapi.MapiConn
-	resultset   *mapi.ResultSet
-	active      bool
-	queryId     int
-	err         error
+	conn      *mapi.MapiConn
+	resultset *mapi.ResultSet
+	active    bool
+	queryId   int
+	err       error
 
-	rowNum      int
-	offset      int
-	lastRowId   int
-	rowCount    int
-	rows        [][]driver.Value
-	schema      []mapi.TableElement
-	columns     []string
+	rowNum    int
+	offset    int
+	lastRowId int
+	rowCount  int
+	rows      [][]driver.Value
+	schema    []mapi.TableElement
+	columns   []string
 }
 
 func newRows(c *mapi.MapiConn, r *mapi.ResultSet) *Rows {
@@ -40,8 +40,8 @@ func newRows(c *mapi.MapiConn, r *mapi.ResultSet) *Rows {
 		active:    true,
 		err:       nil,
 
-		columns:   nil,
-		rowNum:    0,
+		columns: nil,
+		rowNum:  0,
 	}
 }
 
@@ -103,24 +103,24 @@ func min(a, b int) int {
 // we want to be able to cancel it, so we run it inside a goroutine.
 func (s *Rows) mapiDo(ctx context.Context, amount int) (string, error) {
 	type res struct {
-		resultstring string;
-		err error
+		resultstring string
+		err          error
 	}
 	c := make(chan res, 1)
 
-    go func() {
+	go func() {
 		r, err := s.conn.FetchNext(s.queryId, s.offset, amount)
 		result := res{r, err}
 		c <- result
-		}()
+	}()
 
-    select {
-    case <-ctx.Done():
-        <-c // Wait for the goroutine to return. Later we need to cancel the query on the database
-        return "", ctx.Err()
-    case result := <-c:
-        return result.resultstring, result.err
-    }
+	select {
+	case <-ctx.Done():
+		<-c // Wait for the goroutine to return. Later we need to cancel the query on the database
+		return "", ctx.Err()
+	case result := <-c:
+		return result.resultstring, result.err
+	}
 }
 
 func (r *Rows) fetchNext() error {
@@ -149,10 +149,10 @@ func (r *Rows) fetchNext() error {
 func (r *Rows) ColumnTypeLength(index int) (length int64, ok bool) {
 	switch r.schema[index].ColumnType {
 	case mapi.MDB_VARCHAR,
-		mapi.MDB_CHAR :
+		mapi.MDB_CHAR:
 		return int64(r.schema[index].InternalSize), true
 	case mapi.MDB_BLOB,
-		mapi.MDB_CLOB :
+		mapi.MDB_CLOB:
 		return math.MaxInt64, true
 	default:
 		return 0, false
@@ -172,7 +172,7 @@ func (r *Rows) ColumnTypeNullable(index int) (nullable, ok bool) {
 // See https://pkg.go.dev/database/sql/driver#RowsColumnTypePrecisionScale for what to implement
 func (r *Rows) ColumnTypePrecisionScale(index int) (precision, scale int64, ok bool) {
 	switch r.schema[index].ColumnType {
-	case mapi.MDB_DECIMAL :
+	case mapi.MDB_DECIMAL:
 		return int64(r.schema[index].Precision), int64(r.schema[index].Scale), true
 	default:
 		return 0, 0, false
@@ -189,38 +189,38 @@ func (r *Rows) ColumnTypeScanType(index int) reflect.Type {
 		mapi.MDB_CLOB,
 		mapi.MDB_INTERVAL,
 		mapi.MDB_MONTH_INTERVAL,
-		mapi.MDB_SEC_INTERVAL :
+		mapi.MDB_SEC_INTERVAL:
 		scantype = reflect.TypeOf("")
-	case mapi.MDB_NULL :
+	case mapi.MDB_NULL:
 		scantype = reflect.TypeOf(nil)
-	case mapi.MDB_BLOB :
+	case mapi.MDB_BLOB:
 		scantype = reflect.TypeOf([]uint8{0})
-	case mapi.MDB_BOOLEAN :
+	case mapi.MDB_BOOLEAN:
 		scantype = reflect.TypeOf(true)
 	case mapi.MDB_REAL,
-		mapi.MDB_FLOAT :
-		scantype = reflect.TypeOf(float32(0))
-	case mapi.MDB_DECIMAL,
-		mapi.MDB_DOUBLE :
+		mapi.MDB_FLOAT:
 		scantype = reflect.TypeOf(float64(0))
-	case mapi.MDB_TINYINT :
+	case mapi.MDB_DECIMAL,
+		mapi.MDB_DOUBLE:
+		scantype = reflect.TypeOf(float64(0))
+	case mapi.MDB_TINYINT:
 		scantype = reflect.TypeOf(int8(0))
 	case mapi.MDB_SHORTINT,
-		mapi.MDB_SMALLINT :
+		mapi.MDB_SMALLINT:
 		scantype = reflect.TypeOf(int16(0))
 	case mapi.MDB_INT,
 		mapi.MDB_MEDIUMINT,
-		mapi.MDB_WRD :
+		mapi.MDB_WRD:
 		scantype = reflect.TypeOf(int32(0))
 	case mapi.MDB_BIGINT,
 		mapi.MDB_HUGEINT,
 		mapi.MDB_SERIAL,
-		mapi.MDB_LONGINT :
+		mapi.MDB_LONGINT:
 		scantype = reflect.TypeOf(int64(0))
 	case mapi.MDB_DATE,
 		mapi.MDB_TIME,
 		mapi.MDB_TIMESTAMP,
-		mapi.MDB_TIMESTAMPTZ :
+		mapi.MDB_TIMESTAMPTZ:
 		scantype = reflect.TypeOf(time.Time{})
 	default:
 		scantype = reflect.TypeOf(nil)

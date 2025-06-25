@@ -123,6 +123,15 @@ func toDouble(v string) (Value, error) {
 	return strconv.ParseFloat(v, 64)
 }
 
+func toReal(v string) (Value, error) {
+	var r float32
+	i, err := strconv.ParseFloat(v, 32)
+	if err == nil {
+		r = float32(i)
+	}
+	return r, err
+}
+
 func toInt8(v string) (Value, error) {
 	var r int8
 	i, err := strconv.ParseInt(v, 10, 8)
@@ -216,8 +225,9 @@ var toGoMappers = map[string]toGoConverter{
 	MDB_BIGINT:         toInt64,
 	MDB_HUGEINT:        toInt64,
 	MDB_SERIAL:         toInt64,
-	MDB_REAL:           toDouble, //  map REAL (Float32) to Float64 to avoid issues with nullability
+	MDB_REAL:           toReal,
 	MDB_DOUBLE:         toDouble,
+	MDB_FLOAT:          toDouble,
 	MDB_BOOLEAN:        toBool,
 	MDB_DATE:           toDate,
 	MDB_TIME:           toTime,
@@ -230,7 +240,6 @@ var toGoMappers = map[string]toGoConverter{
 	MDB_SHORTINT:       toInt16,
 	MDB_MEDIUMINT:      toInt32,
 	MDB_LONGINT:        toInt64,
-	MDB_FLOAT:          toDouble,
 }
 
 func toString(v Value) (string, error) {

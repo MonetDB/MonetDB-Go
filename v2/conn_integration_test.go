@@ -236,12 +236,10 @@ func TestConnTimezoneIntegration(t *testing.T) {
 			_, offset := mytime.Local().Zone()
 
 			if offset != secondsEastOfUTC {
-
-				// MonetDB might be running with explicit UTC timezone (even if the host uses a different tz)
+				// MonetDB Mar2025 defaults to UTC offset (used to be host machine tz offset)
 				if secondsEastOfUTC != 0 {
 					t.Errorf("Offset mismatch: expected %d (local), got %d (from db)", offset, secondsEastOfUTC)
 				}
-
 			}
 		}
 	})

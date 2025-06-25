@@ -197,11 +197,11 @@ func (r *Rows) ColumnTypeScanType(index int) reflect.Type {
 		scantype = reflect.TypeOf([]uint8{0})
 	case mapi.MDB_BOOLEAN:
 		scantype = reflect.TypeOf(true)
-	case mapi.MDB_REAL,
-		mapi.MDB_FLOAT:
-		scantype = reflect.TypeOf(float64(0))
+	case mapi.MDB_REAL:
+		scantype = reflect.TypeOf(float32(0))
 	case mapi.MDB_DECIMAL,
-		mapi.MDB_DOUBLE:
+		mapi.MDB_DOUBLE,
+		mapi.MDB_FLOAT:
 		scantype = reflect.TypeOf(float64(0))
 	case mapi.MDB_TINYINT:
 		scantype = reflect.TypeOf(int8(0))

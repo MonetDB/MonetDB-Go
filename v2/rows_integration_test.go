@@ -262,7 +262,7 @@ func TestColumnTypesIntegration(t *testing.T) {
 			[]int64{0, 0},
 			[]bool{false, false},
 			[]string{"REAL", "BOOLEAN"},
-			[]string{"float64", "bool"},
+			[]string{"float32", "bool"},
 			[]bool{false, false},
 			[]int64{0, 0},
 			[]int64{0, 0},

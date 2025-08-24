@@ -47,17 +47,17 @@ const (
 
 	// full names and aliases, spaces are replaced with underscores
 	//lint:ignore U1000 prepare to enable staticchecks
-	mdb_CHARACTER               = MDB_CHAR
+	mdb_CHARACTER = MDB_CHAR
 	//lint:ignore U1000 prepare to enable staticchecks
-	mdb_CHARACTER_VARYING       = MDB_VARCHAR
+	mdb_CHARACTER_VARYING = MDB_VARCHAR
 	//lint:ignore U1000 prepare to enable staticchecks
 	mdb_CHARACHTER_LARGE_OBJECT = MDB_CLOB
 	//lint:ignore U1000 prepare to enable staticchecks
-	mdb_BINARY_LARGE_OBJECT     = MDB_BLOB
+	mdb_BINARY_LARGE_OBJECT = MDB_BLOB
 	//lint:ignore U1000 prepare to enable staticchecks
-	mdb_NUMERIC                 = MDB_DECIMAL
+	mdb_NUMERIC = MDB_DECIMAL
 	//lint:ignore U1000 prepare to enable staticchecks
-	mdb_DOUBLE_PRECISION        = MDB_DOUBLE
+	mdb_DOUBLE_PRECISION = MDB_DOUBLE
 )
 
 var timeFormats = []string{
@@ -67,6 +67,7 @@ var timeFormats = []string{
 	"2006-01-02 15:04:05 -0700 MST",
 	"Mon Jan 2 15:04:05 -0700 MST 2006",
 	"2006-01-02 15:04:05.999999+00:00",
+	"2006-01-02 15:04:05.999999-07:00",
 	"15:04:05",
 }
 
@@ -122,7 +123,7 @@ func toDouble(v string) (Value, error) {
 	return strconv.ParseFloat(v, 64)
 }
 
-func toFloat(v string) (Value, error) {
+func toReal(v string) (Value, error) {
 	var r float32
 	i, err := strconv.ParseFloat(v, 32)
 	if err == nil {
@@ -180,7 +181,7 @@ func parseTime(v string) (t time.Time, err error) {
 }
 
 func toNil(v string) (Value, error) {
-	return "NULL", nil
+	return nil, nil
 }
 
 func toBool(v string) (Value, error) {
@@ -224,8 +225,9 @@ var toGoMappers = map[string]toGoConverter{
 	MDB_BIGINT:         toInt64,
 	MDB_HUGEINT:        toInt64,
 	MDB_SERIAL:         toInt64,
-	MDB_REAL:           toFloat,
+	MDB_REAL:           toReal,
 	MDB_DOUBLE:         toDouble,
+	MDB_FLOAT:          toDouble,
 	MDB_BOOLEAN:        toBool,
 	MDB_DATE:           toDate,
 	MDB_TIME:           toTime,
@@ -238,7 +240,6 @@ var toGoMappers = map[string]toGoConverter{
 	MDB_SHORTINT:       toInt16,
 	MDB_MEDIUMINT:      toInt32,
 	MDB_LONGINT:        toInt64,
-	MDB_FLOAT:          toFloat,
 }
 
 func toString(v Value) (string, error) {
@@ -277,27 +278,27 @@ func toDateTimeString(v Value) (string, error) {
 }
 
 var toMonetMappers = map[string]toMonetConverter{
-	"int":          toString,
-	"int8":         toString,
-	"int16":        toString,
-	"int32":        toString,
-	"int64":        toString,
-	"float":        toString,
-	"float32":      toString,
-	"float64":      toString,
-	"bool":         toString,
-	"string":       toQuotedString,
-	"nil":          toNull,
-	"null":         toNull,
-	"[]uint8":      toByteString,
-	"time.Time":    toQuotedString,
+	"int":       toString,
+	"int8":      toString,
+	"int16":     toString,
+	"int32":     toString,
+	"int64":     toString,
+	"float":     toString,
+	"float32":   toString,
+	"float64":   toString,
+	"bool":      toString,
+	"string":    toQuotedString,
+	"nil":       toNull,
+	"null":      toNull,
+	"[]uint8":   toByteString,
+	"time.Time": toQuotedString,
 	"mapi.Time": toDateTimeString,
 	"mapi.Date": toDateTimeString,
 }
 
 func convertToGo(value, dataType string) (Value, error) {
-	if strings.TrimSpace(value) == "NULL" {
-		dataType = "NULL"
+	if strings.TrimSpace(value) == MDB_NULL {
+		dataType = MDB_NULL
 	}
 
 	if mapper, ok := toGoMappers[dataType]; ok {

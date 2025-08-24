@@ -64,7 +64,7 @@ func TestConvertToGo(t *testing.T) {
 		{"64", "longint", int64(64)},
 		{"64", "hugeint", int64(64)},
 		{"64", "serial", int64(64)},
-		{"3.2", "float", float32(3.2)},
+		{"3.2", "float", float64(3.2)},
 		{"3.2", "real", float32(3.2)},
 		{"6.4", "double", float64(6.4)},
 		{"6.4", "decimal", float64(6.4)},
@@ -79,6 +79,9 @@ func TestConvertToGo(t *testing.T) {
 		{"'quoted \\\\\\'string\\\\\\''", "char", "quoted \\'string\\'"},
 		{"'back\\\\slashed'", "char", "back\\slashed"},
 		{"'ABC'", "blob", []uint8{0x41, 0x42, 0x43}},
+		{"NULL", "varchar", nil},
+		{"NULL", "float32", nil},
+		{"NULL", "float64", nil},
 	}
 
 	for _, c := range tcs {

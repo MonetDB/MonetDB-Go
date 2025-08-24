@@ -1,14 +1,14 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. 
-*/
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 package monetdb
 
 import (
 	"database/sql"
 	"testing"
 )
- 
+
 func TestParamIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test")
@@ -78,7 +78,7 @@ func TestParamIntegration(t *testing.T) {
 
 	t.Run("Get Columns", func(t *testing.T) {
 		// Be careful, a named placeholder starts with a colon but does not end with one
-		rows, err := db.Query("select * from test1 where name = :name", sql.Named("name", "name1"))
+		rows, err := db.Query("select * from test1 where name = :name_", sql.Named("name_", "name1"))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -87,7 +87,7 @@ func TestParamIntegration(t *testing.T) {
 		if rows == nil {
 			t.Fatal("empty result")
 		}
-		columnlist, err  := rows.Columns()
+		columnlist, err := rows.Columns()
 		if err != nil {
 			t.Error(err)
 		}
@@ -99,7 +99,7 @@ func TestParamIntegration(t *testing.T) {
 		for rows.Next() {
 			var name string
 			if err := rows.Scan(&name); err != nil {
-			 t.Error(err)
+				t.Error(err)
 			}
 		}
 		if err := rows.Err(); err != nil {
@@ -183,7 +183,7 @@ func TestIntParamIntegration(t *testing.T) {
 	})
 
 	t.Run("Get Columns", func(t *testing.T) {
-		rows, err := db.Query("select * from test1 where name = :name", sql.Named("name", 16))
+		rows, err := db.Query("select * from test1 where name = :name_", sql.Named("name_", 16))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -192,7 +192,7 @@ func TestIntParamIntegration(t *testing.T) {
 		if rows == nil {
 			t.Fatal("empty result")
 		}
-		columnlist, err  := rows.Columns()
+		columnlist, err := rows.Columns()
 		if err != nil {
 			t.Error(err)
 		}
@@ -204,7 +204,7 @@ func TestIntParamIntegration(t *testing.T) {
 		for rows.Next() {
 			var name int
 			if err := rows.Scan(&name); err != nil {
-			 t.Error(err)
+				t.Error(err)
 			}
 		}
 		if err := rows.Err(); err != nil {
@@ -289,7 +289,7 @@ func TestMultipleParamIntegration(t *testing.T) {
 	})
 
 	t.Run("Get Columns", func(t *testing.T) {
-		rows, err := db.Query("select * from test1 where name = :name and value = :value", sql.Named("name", "name1"), sql.Named("value", 16))
+		rows, err := db.Query("select * from test1 where name = :name_ and value = :value_", sql.Named("name_", "name1"), sql.Named("value_", 16))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -298,7 +298,7 @@ func TestMultipleParamIntegration(t *testing.T) {
 		if rows == nil {
 			t.Fatal("empty result")
 		}
-		columnlist, err  := rows.Columns()
+		columnlist, err := rows.Columns()
 		if err != nil {
 			t.Error(err)
 		}

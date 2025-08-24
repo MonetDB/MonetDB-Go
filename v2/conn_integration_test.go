@@ -104,7 +104,7 @@ func TestConnSerialIntegration(t *testing.T) {
 	})
 
 	t.Run("insert statement", func(t *testing.T) {
-		result, err := db.Exec("insert into test3 ( name ) values ( 'name' )" )
+		result, err := db.Exec("insert into test3 ( name ) values ( 'name' )")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -139,7 +139,7 @@ func TestConnSerialIntegration(t *testing.T) {
 			var id int
 			var name string
 			if err := rows.Scan(&id, &name); err != nil {
-			 t.Error(err)
+				t.Error(err)
 			}
 		}
 		if err := rows.Err(); err != nil {
@@ -180,7 +180,7 @@ func TestConnTimezoneIntegration(t *testing.T) {
 	})
 
 	t.Run("insert statement", func(t *testing.T) {
-		result, err := db.Exec("insert into test3 ( sometime ) values ( '2024-01-19 09:54:30.988417434+0000' )" )
+		result, err := db.Exec("insert into test3 ( sometime ) values ( '2024-01-19 09:54:30.988417434+0000' )")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -214,7 +214,7 @@ func TestConnTimezoneIntegration(t *testing.T) {
 		for rows.Next() {
 			var sometime time.Time
 			if err := rows.Scan(&sometime); err != nil {
-			 t.Error(err)
+				t.Error(err)
 			}
 		}
 		if err := rows.Err(); err != nil {
@@ -234,8 +234,12 @@ func TestConnTimezoneIntegration(t *testing.T) {
 		default:
 			mytime := time.Now()
 			_, offset := mytime.Local().Zone()
+
 			if offset != secondsEastOfUTC {
-				t.Error("Offset is not the same as the database timezone")
+				// MonetDB Mar2025 defaults to UTC offset (used to be host machine tz offset)
+				if secondsEastOfUTC != 0 {
+					t.Errorf("Offset mismatch: expected %d (local), got %d (from db)", offset, secondsEastOfUTC)
+				}
 			}
 		}
 	})
